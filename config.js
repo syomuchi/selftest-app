@@ -1,2 +1,4 @@
 const SUPABASE_URL = 'https://idqbcduhwvrdmxtljpmw.supabase.co';
-const SUPABASE_ANON_KEY = '在这里粘贴你的 anon public key';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkcWJjZHVod3ZyZG14dGxqcG13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTg4MzIsImV4cCI6MjEwMTc3NDgzMn0.1ShY6RNJ9APV90IQwMeH-0IQKb0y8dqTIuxcJ4x7wOQ
+
+';
