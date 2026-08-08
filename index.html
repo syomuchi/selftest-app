@@ -1,0 +1,3478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>学会了吗？— 自我检测工具 V3</title>
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+
+/* ============================================================
+   THEME VARIABLES
+   ============================================================ */
+:root{
+  --bg:#f0f2f5;
+  --bg-grad:linear-gradient(160deg,#e0e7ff 0%,#f0f2f5 35%,#fef3c7 100%);
+  --card:#ffffff; --card-2:#f8fafc; --card-glass:rgba(255,255,255,.7);
+  --text:#1e293b; --text-2:#64748b; --text-3:#94a3b8;
+  --primary:#6366f1; --primary-d:#4f46e5; --primary-light:#eef2ff;
+  --primary-grad:linear-gradient(135deg,#6366f1,#8b5cf6);
+  --accent:#f59e0b; --accent-light:#fef3c7;
+  --success:#10b981; --success-light:#d1fae5;
+  --danger:#ef4444; --danger-light:#fee2e2;
+  --info:#06b6d4; --info-light:#cffafe;
+  --pink:#ec4899; --pink-light:#fce7f3;
+  --border:#e2e8f0; --border-2:#cbd5e1;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(99,102,241,.15);
+  --shadow-glow:0 0 0 4px rgba(99,102,241,.08);
+  --radius:18px; --radius-sm:12px; --radius-xs:8px;
+  --nav-h:64px;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;
+  --bg-grad:linear-gradient(160deg,#1e1b4b 0%,#0f172a 40%,#1a1a2e 100%);
+  --card:#1e293b; --card-2:#334155; --card-glass:rgba(30,41,59,.8);
+  --text:#f1f5f9; --text-2:#94a3b8; --text-3:#64748b;
+  --primary:#818cf8; --primary-d:#6366f1; --primary-light:#312e81;
+  --primary-grad:linear-gradient(135deg,#818cf8,#a78bfa);
+  --accent:#fbbf24; --accent-light:#422006;
+  --success:#34d399; --success-light:#064e3b;
+  --danger:#f87171; --danger-light:#7f1d1d;
+  --info:#22d3ee; --info-light:#083344;
+  --pink:#f472b6; --pink-light:#500724;
+  --border:#334155; --border-2:#475569;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.2);
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
+  --shadow-md:0 4px 12px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.5);
+  --shadow-glow:0 0 0 4px rgba(129,140,248,.1);
+}
+
+/* ============================================================
+   AUTH OVERLAY & SYNC INDICATOR
+   ============================================================ */
+.auth-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#e0e7ff 0%,#f0f2f5 35%,#fef3c7 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn .3s ease;
+}
+[data-theme="dark"] .auth-overlay{
+  background:linear-gradient(160deg,#1e1b4b 0%,#0f172a 40%,#1a1a2e 100%);
+}
+.auth-card{
+  background:var(--card);border-radius:24px;padding:40px 32px;
+  width:100%;max-width:380px;box-shadow:var(--shadow-lg);
+  text-align:center;animation:slideUp .4s var(--ease-spring);
+}
+.auth-logo{font-size:48px;margin-bottom:12px}
+.auth-title{font-size:24px;font-weight:800;color:var(--text);margin-bottom:4px}
+.auth-subtitle{font-size:14px;color:var(--text-2);margin-bottom:24px}
+.auth-tabs{
+  display:flex;gap:4px;background:var(--card-2);border-radius:12px;
+  padding:4px;margin-bottom:24px;
+}
+.auth-tab{
+  flex:1;padding:10px;border:none;background:transparent;border-radius:8px;
+  font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;
+  transition:all .2s;
+}
+.auth-tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow-xs)}
+.auth-tab:active{transform:scale(.97)}
+.auth-error{
+  background:var(--danger-light);color:var(--danger);
+  padding:10px 14px;border-radius:10px;font-size:13px;
+  margin-bottom:12px;animation:shake .3s ease;
+}
+.auth-submit-btn{width:100%;padding:14px;font-size:15px}
+.auth-footer{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.sync-indicator{
+  position:fixed;top:8px;right:50%;transform:translateX(50%);
+  z-index:9000;background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:6px 16px;font-size:12px;color:var(--text-2);
+  display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-xs);
+  animation:slideDown .3s ease;white-space:nowrap;
+}
+.sync-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--primary);
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  background:var(--bg-grad);
+  background-attachment:fixed;
+  color:var(--text);
+  line-height:1.6;
+  min-height:100vh;
+  padding-bottom:calc(var(--nav-h) + 24px);
+  transition:background .4s,color .3s;
+  -webkit-font-smoothing:antialiased;
+}
+input,textarea,button,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+input,textarea{background:transparent;border:none;outline:none;width:100%}
+textarea{resize:vertical;min-height:120px;line-height:1.7}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+#app{max-width:680px;margin:0 auto;padding:16px 16px 40px}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.app-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 4px 20px;
+}
+.app-title{
+  font-size:24px;font-weight:800;letter-spacing:-.8px;
+  display:flex;align-items:center;gap:2px;
+}
+.app-title .accent{
+  background:var(--primary-grad);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.app-title .ver{
+  font-size:10px;font-weight:600;color:var(--text-3);
+  background:var(--card);padding:2px 8px;border-radius:20px;margin-left:6px;
+  box-shadow:var(--shadow-xs);
+}
+.theme-toggle{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--card);box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;transition:transform .3s var(--ease-spring);
+}
+.theme-toggle:active{transform:scale(.85) rotate(180deg)}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px;margin-bottom:14px;
+  transition:box-shadow .3s,transform .2s var(--ease-out);
+}
+.card.clickable{cursor:pointer}
+.card.clickable:active{transform:scale(.98)}
+
+/* ============================================================
+   HERO CARD
+   ============================================================ */
+.hero-card{
+  background:var(--primary-grad);border-radius:var(--radius);
+  padding:26px 22px;color:#fff;position:relative;overflow:hidden;
+  box-shadow:var(--shadow-lg);margin-bottom:14px;
+}
+.hero-card::after{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+}
+.hero-card::before{
+  content:'';position:absolute;bottom:-40px;left:-15px;
+  width:100px;height:100px;border-radius:50%;
+  background:rgba(255,255,255,.07);
+}
+.hero-card h2{font-size:20px;margin-bottom:6px;position:relative;z-index:1;font-weight:800}
+.hero-card p{font-size:13px;opacity:.88;position:relative;z-index:1}
+.hero-card .hero-emoji{position:relative;z-index:1;font-size:28px;display:block;margin-bottom:4px}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+.stats-row{display:flex;gap:10px;margin-bottom:14px}
+.stat-card{
+  flex:1;background:var(--card);border-radius:var(--radius-sm);
+  padding:16px 12px;text-align:center;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--stat-color,var(--primary));
+}
+.stat-num{font-size:26px;font-weight:800;letter-spacing:-1px}
+.stat-label{font-size:11px;color:var(--text-2);margin-top:2px}
+
+/* Weekly summary card */
+.weekly-card{
+  background:var(--card);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);margin-bottom:14px;
+  display:flex;align-items:center;gap:16px;
+}
+.weekly-ring{
+  width:56px;height:56px;position:relative;flex-shrink:0;
+}
+.weekly-ring svg{transform:rotate(-90deg)}
+.weekly-ring .ring-label{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:14px;font-weight:800;
+}
+.weekly-info{flex:1}
+.weekly-title{font-size:14px;font-weight:700}
+.weekly-detail{font-size:12px;color:var(--text-2);margin-top:2px;line-height:1.5}
+.weekly-bars{display:flex;gap:3px;margin-top:8px;height:24px;align-items:flex-end}
+.weekly-bar{
+  flex:1;border-radius:2px;min-height:3px;
+  background:var(--border);transition:height .4s var(--ease-out);
+}
+.weekly-bar.has-data{background:var(--primary);opacity:.6}
+.weekly-bar.today{background:var(--primary);opacity:1}
+.weekly-bar-labels{display:flex;gap:3px;margin-top:2px}
+.weekly-bar-label{flex:1;text-align:center;font-size:8px;color:var(--text-3)}
+
+/* ============================================================
+   SECTION TITLE
+   ============================================================ */
+.section-title{
+  font-size:14px;font-weight:700;color:var(--text-2);
+  margin:20px 0 10px;padding-left:4px;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;
+}
+.section-title::before{
+  content:'';width:4px;height:14px;border-radius:2px;
+  background:var(--primary-grad);
+}
+.section-title .st-action{
+  margin-left:auto;font-size:12px;font-weight:600;color:var(--primary);
+  cursor:pointer;
+}
+
+/* ============================================================
+   MODE GRID
+   ============================================================ */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mode-card{
+  background:var(--card);border-radius:var(--radius);padding:18px 16px;
+  box-shadow:var(--shadow);cursor:pointer;
+  transition:transform .2s var(--ease-out),box-shadow .3s;
+  position:relative;overflow:hidden;
+}
+.mode-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.mode-card:active{transform:scale(.97)}
+.mode-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:var(--mode-accent,var(--primary));opacity:0;transition:opacity .3s;
+}
+.mode-card:hover::after{opacity:1}
+.mode-icon{font-size:32px;margin-bottom:8px;display:block}
+.mode-name{font-size:15px;font-weight:700}
+.mode-desc{font-size:11px;color:var(--text-2);margin-top:3px;line-height:1.4}
+.mode-tag{
+  position:absolute;top:12px;right:12px;
+  font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600;
+}
+
+/* ============================================================
+   FORM ELEMENTS
+   ============================================================ */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px}
+.form-input,.form-textarea{
+  background:var(--card-2);border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);padding:12px 14px;width:100%;
+  font-size:15px;transition:border-color .2s,background .2s,box-shadow .2s;
+}
+.form-input:focus,.form-textarea:focus{
+  border-color:var(--primary);background:var(--card);
+  box-shadow:var(--shadow-glow);
+}
+.form-textarea{min-height:100px;line-height:1.7}
+.form-hint{font-size:12px;color:var(--text-3);margin-top:4px}
+
+/* Writing prompt */
+.writing-prompt{
+  background:var(--accent-light);border-radius:var(--radius-sm);
+  padding:10px 14px;font-size:12px;color:var(--accent);
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+  border:1px solid rgba(245,158,11,.2);
+}
+.writing-prompt .prompt-icon{flex-shrink:0}
+
+/* Word count */
+.word-count-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--text-3);margin-top:6px;padding:0 2px;
+}
+.word-count-bar .wc-num{font-weight:600;color:var(--text-2)}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:13px 24px;border-radius:var(--radius-sm);font-size:15px;font-weight:600;
+  transition:transform .12s var(--ease-spring),opacity .2s,box-shadow .2s;width:100%;
+  position:relative;overflow:hidden;
+}
+.btn:active{transform:scale(.96)}
+.btn-primary{
+  background:var(--primary-grad);color:#fff;
+  box-shadow:0 4px 14px rgba(99,102,241,.3);
+}
+.btn-primary:hover{box-shadow:0 6px 20px rgba(99,102,241,.4)}
+.btn-secondary{background:var(--card-2);color:var(--text);border:1.5px solid var(--border)}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:transparent;color:var(--text-2)}
+.btn-sm{padding:8px 16px;font-size:13px;width:auto}
+.btn:disabled{opacity:.4;pointer-events:none}
+
+/* ============================================================
+   TAGS & CHIPS
+   ============================================================ */
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+.tag-feynman{background:var(--accent-light);color:var(--accent)}
+.tag-recall{background:var(--primary-light);color:var(--primary)}
+.tag-quiz{background:var(--success-light);color:var(--success)}
+
+.chip-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;padding:5px 10px;border-radius:20px;
+  background:var(--card-2);border:1px solid var(--border);
+  transition:border-color .2s;
+}
+.chip[style*="cursor:pointer"]:hover{border-color:var(--primary)}
+.chip-remove{cursor:pointer;color:var(--text-3);font-size:14px;line-height:1}
+.chip-remove:hover{color:var(--danger)}
+
+/* Course color dot */
+.course-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block}
+.course-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;
+  background:var(--card-2);border:1px solid var(--border);
+}
+
+/* ============================================================
+   FEYNMAN CHECKLIST
+   ============================================================ */
+.feynman-checklist{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+.check-item{
+  display:flex;align-items:center;gap:10px;padding:14px;
+  background:var(--card-2);border-radius:var(--radius-sm);
+  border:1.5px solid var(--border);cursor:pointer;
+  transition:border-color .2s,background .2s,transform .15s var(--ease-out);
+}
+.check-item:hover{border-color:var(--primary)}
+.check-item:active{transform:scale(.98)}
+.check-item.checked{border-color:var(--success);background:var(--success-light)}
+.check-circle{
+  width:24px;height:24px;border-radius:50%;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .2s var(--ease-spring);
+}
+.check-item.checked .check-circle{border-color:var(--success);background:var(--success);color:#fff;transform:scale(1.1)}
+.check-text{font-size:14px;line-height:1.5}
+.check-item.checked .check-text{color:var(--success);text-decoration:line-through;opacity:.7}
+
+/* ============================================================
+   TIMER & PROGRESS
+   ============================================================ */
+.timer-bar{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;color:var(--text-2);font-variant-numeric:tabular-nums;
+  background:var(--card-2);padding:8px 12px;border-radius:var(--radius-xs);
+}
+.timer-dot{width:8px;height:8px;border-radius:50%;background:var(--text-3)}
+.timer-dot.active{background:var(--danger);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:var(--primary-grad);border-radius:3px;transition:width .5s var(--ease-out)}
+
+/* ============================================================
+   RECALL
+   ============================================================ */
+.recall-step-indicator{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s var(--ease-out)}
+.step-dot.active{width:24px;border-radius:4px;background:var(--primary)}
+.step-dot.done{background:var(--success)}
+.step-dot.uncertain{background:var(--accent)}
+
+.recall-prompt-box{
+  background:var(--primary-light);padding:16px;border-radius:var(--radius-sm);
+  margin-bottom:16px;border-left:4px solid var(--primary);
+}
+.recall-prompt-box .prompt-label{font-size:11px;color:var(--text-3);margin-bottom:4px}
+.recall-prompt-box .prompt-text{font-size:18px;font-weight:700;color:var(--primary)}
+
+.recall-display-box{
+  background:var(--card-2);border-radius:var(--radius-sm);padding:16px;
+  margin-bottom:12px;border:1px solid var(--border);position:relative;
+}
+.recall-display-box .box-label{font-size:11px;color:var(--text-3);margin-bottom:6px}
+.recall-display-box .box-content{font-size:14px;line-height:1.7;white-space:pre-wrap}
+
+/* ============================================================
+   GRADE BUTTONS
+   ============================================================ */
+.grade-buttons{display:flex;gap:8px;margin-top:14px}
+.grade-btn{
+  flex:1;padding:14px 8px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;
+  border:2px solid var(--border);background:var(--card);
+  transition:all .2s var(--ease-out);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;
+}
+.grade-btn:hover{transform:translateY(-2px)}
+.grade-btn:active{transform:scale(.95)}
+.grade-btn .grade-emoji{font-size:24px}
+.grade-btn.grade-good{border-color:var(--success);color:var(--success)}
+.grade-btn.grade-good:hover{background:var(--success-light)}
+.grade-btn.grade-mid{border-color:var(--accent);color:var(--accent)}
+.grade-btn.grade-mid:hover{background:var(--accent-light)}
+.grade-btn.grade-bad{border-color:var(--danger);color:var(--danger)}
+.grade-btn.grade-bad:hover{background:var(--danger-light)}
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
+.quiz-question{font-size:17px;font-weight:700;line-height:1.5;margin-bottom:12px}
+.quiz-answer-ref{
+  background:var(--card-2);border-left:4px solid var(--primary);
+  padding:14px;border-radius:0 var(--radius-xs) var(--radius-xs) 0;
+  font-size:14px;line-height:1.7;white-space:pre-wrap;
+}
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+.result-hero{
+  text-align:center;padding:32px 20px;border-radius:var(--radius);
+  margin-bottom:16px;position:relative;overflow:hidden;
+}
+.result-hero::after{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:120px;height:120px;border-radius:50%;
+  background:rgba(255,255,255,.08);
+}
+.result-hero h2{font-size:28px;font-weight:800;margin-bottom:6px;position:relative;z-index:1}
+.result-hero p{font-size:14px;opacity:.85;position:relative;z-index:1}
+.result-ring{
+  width:110px;height:110px;margin:0 auto 14px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.result-ring svg{transform:rotate(-90deg)}
+.result-ring .ring-num{
+  position:absolute;font-size:30px;font-weight:800;
+}
+.result-stats{display:flex;gap:10px;margin-bottom:16px}
+.result-stat{
+  flex:1;background:var(--card);border-radius:var(--radius-sm);
+  padding:14px;text-align:center;box-shadow:var(--shadow);
+}
+.result-stat .num{font-size:20px;font-weight:800}
+.result-stat .label{font-size:11px;color:var(--text-2);margin-top:2px}
+
+/* ============================================================
+   OVERVIEW - TOPIC LIST
+   ============================================================ */
+.topic-item{
+  display:flex;align-items:center;gap:12px;padding:14px;
+  background:var(--card-2);border-radius:var(--radius-sm);margin-bottom:8px;
+  border:1px solid var(--border);transition:border-color .2s,transform .15s var(--ease-out);
+  cursor:pointer;
+}
+.topic-item:hover{border-color:var(--primary);transform:translateX(2px)}
+.topic-item:active{transform:scale(.98)}
+.topic-icon{
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.topic-info{flex:1;min-width:0}
+.topic-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topic-meta{font-size:11px;color:var(--text-2);margin-top:2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.mastery-bar{width:50px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0}
+.mastery-fill{height:100%;border-radius:3px;transition:width .5s var(--ease-out)}
+.mastery-num{font-size:16px;font-weight:800;text-align:right;flex-shrink:0;width:32px}
+
+/* ============================================================
+   SEARCH & FILTER
+   ============================================================ */
+.search-bar{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card);border-radius:var(--radius-sm);
+  padding:10px 14px;box-shadow:var(--shadow);margin-bottom:12px;
+}
+.search-bar input{flex:1;font-size:14px}
+.search-bar .search-icon{font-size:16px;color:var(--text-3);flex-shrink:0}
+
+.filter-row{
+  display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;padding-bottom:2px;
+}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-chip{
+  font-size:12px;padding:6px 12px;border-radius:20px;
+  background:var(--card);border:1px solid var(--border);
+  white-space:nowrap;cursor:pointer;transition:all .2s;
+  flex-shrink:0;font-weight:500;
+}
+.filter-chip.active{
+  background:var(--primary);color:#fff;border-color:var(--primary);
+}
+
+/* ============================================================
+   TREND CHART
+   ============================================================ */
+.trend-chart{
+  background:var(--card);border-radius:var(--radius);padding:18px 16px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.trend-chart-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+}
+.trend-chart-title{font-size:14px;font-weight:700}
+.trend-chart-svg{width:100%;height:100px}
+
+/* ============================================================
+   RADAR CHART
+   ============================================================ */
+.radar-chart{
+  background:var(--card);border-radius:var(--radius);padding:18px 16px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.radar-chart-title{font-size:14px;font-weight:700;margin-bottom:12px}
+.radar-chart svg{width:100%;max-width:260px;display:block;margin:0 auto}
+
+/* ============================================================
+   TOPIC DETAIL
+   ============================================================ */
+.topic-detail-header{
+  background:var(--primary-grad);border-radius:var(--radius);
+  padding:24px 20px;color:#fff;margin-bottom:14px;
+  box-shadow:var(--shadow-lg);position:relative;overflow:hidden;
+}
+.topic-detail-header::after{
+  content:'';position:absolute;top:-20px;right:-20px;
+  width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1);
+}
+.topic-detail-header .tdh-label{font-size:12px;opacity:.7;position:relative;z-index:1}
+.topic-detail-header .tdh-name{font-size:22px;font-weight:800;margin:2px 0 8px;position:relative;z-index:1}
+.topic-detail-header .tdh-stats{display:flex;gap:16px;position:relative;z-index:1;flex-wrap:wrap}
+.topic-detail-header .tdh-stat{font-size:13px}
+.topic-detail-header .tdh-stat strong{font-size:20px;font-weight:800;display:block}
+
+/* ============================================================
+   COURSE SCHEDULE
+   ============================================================ */
+.semester-tabs{
+  display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;
+  -webkit-overflow-scrolling:touch;padding-bottom:2px;
+}
+.semester-tabs::-webkit-scrollbar{display:none}
+.semester-tab{
+  font-size:13px;padding:8px 16px;border-radius:var(--radius-sm);
+  background:var(--card);border:1px solid var(--border);
+  white-space:nowrap;cursor:pointer;transition:all .2s;
+  flex-shrink:0;font-weight:600;
+}
+.semester-tab.active{
+  background:var(--primary-grad);color:#fff;border-color:transparent;
+}
+
+.course-card{
+  background:var(--card);border-radius:var(--radius);padding:18px;
+  box-shadow:var(--shadow);margin-bottom:12px;position:relative;
+  overflow:hidden;cursor:pointer;
+  transition:transform .2s var(--ease-out),box-shadow .3s;
+}
+.course-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.course-card:active{transform:scale(.98)}
+.course-card::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:4px;
+  background:var(--course-color,var(--primary));
+}
+.course-card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;
+}
+.course-name{font-size:16px;font-weight:700;flex:1}
+.course-meta{
+  font-size:12px;color:var(--text-2);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.course-stats{
+  display:flex;gap:16px;margin-top:12px;
+  padding-top:12px;border-top:1px solid var(--border);
+}
+.course-stat{font-size:12px;color:var(--text-2)}
+.course-stat strong{font-size:18px;font-weight:800;color:var(--text);display:block}
+
+.exam-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600;
+  background:var(--danger-light);color:var(--danger);
+}
+.exam-badge.soon{background:var(--accent-light);color:var(--accent)}
+.exam-badge.far{background:var(--info-light);color:var(--info)}
+
+/* ============================================================
+   TEST HISTORY TABLE
+   ============================================================ */
+.history-table{
+  width:100%;border-collapse:collapse;font-size:13px;
+}
+.history-table th{
+  text-align:left;padding:8px 6px;font-size:11px;font-weight:600;
+  color:var(--text-3);border-bottom:1px solid var(--border);
+}
+.history-table td{
+  padding:10px 6px;border-bottom:1px solid var(--border);
+}
+.history-table tr:last-child td{border-bottom:none}
+.history-table .score-cell{font-weight:800;text-align:center}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-3)}
+.empty-state .emoji{font-size:48px;margin-bottom:8px}
+.empty-state .text{font-size:14px}
+.empty-state .sub{font-size:12px;margin-top:4px;color:var(--text-3)}
+
+/* Welcome card */
+.welcome-card{
+  background:var(--card);border:2px dashed var(--primary);border-radius:var(--radius);
+  padding:20px;margin-bottom:14px;position:relative;
+}
+.welcome-card .wc-close{
+  position:absolute;top:10px;right:10px;
+  width:24px;height:24px;border-radius:50%;
+  background:var(--card-2);display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--text-3);cursor:pointer;
+}
+.welcome-card h3{font-size:16px;font-weight:700;margin-bottom:8px}
+.welcome-card p{font-size:13px;color:var(--text-2);line-height:1.7}
+.welcome-card .wc-steps{margin-top:10px}
+.welcome-card .wc-step{display:flex;gap:8px;padding:4px 0;font-size:13px}
+.welcome-card .wc-step-num{
+  width:20px;height:20px;border-radius:50%;background:var(--primary);
+  color:#fff;font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* ============================================================
+   BOTTOM NAV
+   ============================================================ */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--card);border-top:1px solid var(--border);
+  display:flex;justify-content:space-around;align-items:center;
+  height:var(--nav-h);z-index:100;
+  max-width:680px;margin:0 auto;border-radius:var(--radius) var(--radius) 0 0;
+  box-shadow:0 -2px 10px rgba(0,0,0,.04);
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 14px;border-radius:var(--radius-xs);
+  color:var(--text-3);font-size:10px;font-weight:500;transition:color .2s;
+  cursor:pointer;
+}
+.nav-item.active{color:var(--primary)}
+.nav-item.active .nav-icon{transform:scale(1.15);transition:transform .3s var(--ease-spring)}
+.nav-item .nav-icon{font-size:20px;line-height:1;transition:transform .3s}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+.stagger-1{animation:fadeInUp .4s var(--ease-out) .05s both}
+.stagger-2{animation:fadeInUp .4s var(--ease-out) .1s both}
+.stagger-3{animation:fadeInUp .4s var(--ease-out) .15s both}
+.stagger-4{animation:fadeInUp .4s var(--ease-out) .2s both}
+.stagger-5{animation:fadeInUp .4s var(--ease-out) .25s both}
+.stagger-6{animation:fadeInUp .4s var(--ease-out) .3s both}
+
+.fade-in-up{animation:fadeInUp .4s var(--ease-out)}
+.fade-in{animation:fadeIn .3s ease-out}
+.scale-in{animation:scaleIn .3s var(--ease-spring)}
+.bounce{animation:bounce .3s ease-out}
+
+/* ============================================================
+   CONFETTI
+   ============================================================ */
+.confetti-piece{
+  position:fixed;width:10px;height:10px;z-index:9999;
+  pointer-events:none;animation:confettiFall 2s ease-out forwards;
+}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateY(0) rotate(0deg)}
+  100%{opacity:0;transform:translateY(400px) rotate(720deg)}
+}
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+.flex{display:flex}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.flex-center{display:flex;align-items:center;justify-content:center}
+.gap-8{gap:8px}
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}
+.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}
+.text-center{text-align:center}
+.text-sm{font-size:13px}.text-xs{font-size:11px}
+.text-muted{color:var(--text-2)}.text-faint{color:var(--text-3)}
+.font-bold{font-weight:700}
+.hidden{display:none!important}
+.w-full{width:100%}
+.divider{height:1px;background:var(--border);margin:16px 0;border:none}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:calc(var(--nav-h) + 20px);left:50%;transform:translateX(-50%);
+  background:var(--text);color:var(--card);padding:10px 20px;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:500;z-index:200;animation:scaleIn .3s var(--ease-spring);
+  box-shadow:var(--shadow-lg);white-space:nowrap;max-width:90vw;
+}
+
+/* Quick retest button */
+.quick-btn{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.quick-btn:hover{border-color:var(--primary);color:var(--primary)}
+.quick-btn:active{transform:scale(.9)}
+
+/* Back button */
+.back-btn{
+  display:flex;align-items:center;gap:4px;
+  font-size:14px;font-weight:600;color:var(--text-2);
+  padding:8px 12px;border-radius:var(--radius-xs);
+  cursor:pointer;transition:background .2s;
+}
+.back-btn:hover{background:var(--card-2)}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn .2s ease-out;
+}
+.modal-content{
+  background:var(--card);border-radius:var(--radius);
+  max-width:400px;width:100%;padding:24px;
+  animation:scaleIn .3s var(--ease-spring);
+  box-shadow:var(--shadow-lg);
+}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:12px}
+.modal-body{font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:20px}
+.modal-actions{display:flex;gap:8px}
+
+/* Settings list */
+.settings-group{
+  background:var(--card);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.settings-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .2s;
+}
+.settings-item:last-child{border-bottom:none}
+.settings-item:hover{background:var(--card-2)}
+.settings-item .si-left{display:flex;align-items:center;gap:12px}
+.settings-item .si-icon{font-size:20px;width:24px;text-align:center}
+.settings-item .si-label{font-size:14px;font-weight:500}
+.settings-item .si-value{font-size:13px;color:var(--text-2)}
+
+@media(min-width:680px){
+  .bottom-nav{border-radius:var(--radius) var(--radius) 0 0}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="app-header">
+    <div class="app-title">学会了吗<span class="accent">？</span><span class="ver">V3</span></div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
+  </div>
+  <div id="view-container"></div>
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-nav="home" onclick="navigate('home')">
+      <span class="nav-icon">🏠</span><span>首页</span>
+    </div>
+    <div class="nav-item" data-nav="schedule" onclick="navigate('schedule')">
+      <span class="nav-icon">📅</span><span>课程</span>
+    </div>
+    <div class="nav-item" data-nav="test" onclick="navigate('test')">
+      <span class="nav-icon">🎯</span><span>检测</span>
+    </div>
+    <div class="nav-item" data-nav="overview" onclick="navigate('overview')">
+      <span class="nav-icon">📊</span><span>全景</span>
+    </div>
+    <div class="nav-item" data-nav="settings" onclick="navigate('settings')">
+      <span class="nav-icon">⚙️</span><span>设置</span>
+    </div>
+  </nav>
+</div>
+
+<!-- 登录/注册页面 -->
+<div id="auth-overlay" class="auth-overlay" style="display:none">
+  <div class="auth-card">
+    <div class="auth-logo">📚</div>
+    <div class="auth-title">学会了吗？</div>
+    <div class="auth-subtitle">云端版 — 4 年数据永久保存</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">登录</button>
+      <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">注册</button>
+    </div>
+    <div id="auth-form">
+      <div class="form-group">
+        <label class="form-label">邮箱</label>
+        <input class="form-input" id="auth-email" type="email" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input class="form-input" id="auth-password" type="password" placeholder="至少 6 位" autocomplete="current-password">
+      </div>
+      <div class="auth-error" id="auth-error" style="display:none"></div>
+      <button class="btn btn-primary auth-submit-btn" id="auth-submit" onclick="handleAuth()">登录</button>
+    </div>
+    <div class="auth-footer" id="auth-footer">
+      <button class="btn btn-ghost btn-sm" onclick="useLocalOnly()">先离线用用看</button>
+    </div>
+  </div>
+</div>
+
+<!-- 同步状态指示器 -->
+<div id="sync-indicator" class="sync-indicator" style="display:none">
+  <span class="sync-dot"></span>
+  <span class="sync-text">同步中...</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+/* ============================================================
+   CLOUD SYNC LAYER — Supabase 集成
+   ============================================================ */
+let supabase = null;
+let currentUser = null;
+let syncTimer = null;
+let isOnlineMode = false;
+
+function initSupabase() {
+  if (typeof SUPABASE_URL === 'undefined' || SUPABASE_URL.includes('在这里粘贴')) {
+    console.warn('[Cloud] config.js 未配置，将使用离线模式');
+    return false;
+  }
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+  } catch(e) {
+    console.error('[Cloud] Supabase 初始化失败:', e);
+    return false;
+  }
+}
+
+// 检查登录状态
+async function checkAuth() {
+  if (!supabase) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    return session.user;
+  }
+  return null;
+}
+
+// 注册
+async function signUp(email, password) {
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+// 登录
+async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+// 退出
+async function signOut() {
+  if (supabase) await supabase.auth.signOut();
+  currentUser = null;
+  isOnlineMode = false;
+}
+
+/* ----- 云端数据同步 ----- */
+
+// 推送全部本地数据到云端
+async function cloudPushAll() {
+  if (!supabase || !currentUser) return;
+  showSyncIndicator(true);
+  try {
+    const uid = currentUser.id;
+
+    // Push semesters
+    for (const sem of state.semesters) {
+      if (!sem.id || sem.id === 'default') continue;
+      await supabase.from('semesters').upsert({
+        id: sem.id, user_id: uid, name: sem.name,
+        start_date: sem.startDate || null, end_date: sem.endDate || null
+      });
+    }
+
+    // Push courses
+    for (const cid in state.courses) {
+      const c = state.courses[cid];
+      await supabase.from('courses').upsert({
+        id: c.id, user_id: uid, name: c.name,
+        semester_id: c.semester || null, color: c.color || '#6366f1',
+        exam_date: c.examDate || null, notes: c.notes || ''
+      });
+    }
+
+    // Push topics (without tests)
+    for (const tid in state.topics) {
+      const t = state.topics[tid];
+      await supabase.from('topics').upsert({
+        id: t.id, user_id: uid, name: t.name,
+        tags: t.tags || [], course_id: t.courseId || null,
+        created_at: new Date(t.createdAt || Date.now()).toISOString()
+      });
+
+      // Push tests for this topic
+      if (t.tests) {
+        for (const test of t.tests) {
+          await supabase.from('tests').upsert({
+            id: test.id, user_id: uid, topic_id: t.id,
+            type: test.type, score: test.score,
+            duration: test.duration || 0,
+            explanation: test.explanation || null,
+            checks: test.checks || null,
+            subtopics: test.subtopics || null,
+            details: test.details || null,
+            date: test.date
+          });
+        }
+      }
+    }
+
+    // Push quizzes
+    for (const qid in state.quizzes) {
+      const q = state.quizzes[qid];
+      await supabase.from('quizzes').upsert({
+        id: q.id, user_id: uid, name: q.name,
+        questions: q.questions
+      });
+    }
+
+    // Push settings
+    await supabase.from('user_settings').upsert({
+      user_id: uid, dark_mode: state.theme === 'dark',
+      has_seen_welcome: state.hasSeenWelcome
+    });
+
+    showSyncIndicator(false);
+  } catch(e) {
+    console.error('[Cloud] Push failed:', e);
+    showSyncIndicator(false, '同步失败');
+  }
+}
+
+// 从云端拉取全部数据
+async function cloudPullAll() {
+  if (!supabase || !currentUser) return false;
+  showSyncIndicator(true);
+  try {
+    const uid = currentUser.id;
+
+    // Pull semesters
+    const { data: semesters } = await supabase.from('semesters').select('*').eq('user_id', uid);
+    state.semesters = (semesters || []).map(s => ({
+      id: s.id, name: s.name,
+      startDate: s.start_date, endDate: s.end_date
+    }));
+    if (state.semesters.length === 0) {
+      state.semesters = [{ id: 'default', name: '默认学期' }];
+    }
+
+    // Pull courses
+    const { data: courses } = await supabase.from('courses').select('*').eq('user_id', uid);
+    state.courses = {};
+    (courses || []).forEach(c => {
+      state.courses[c.id] = {
+        id: c.id, name: c.name, semester: c.semester_id,
+        color: c.color, examDate: c.exam_date, notes: c.notes
+      };
+    });
+
+    // Pull topics
+    const { data: topics } = await supabase.from('topics').select('*').eq('user_id', uid);
+    const { data: tests } = await supabase.from('tests').select('*').eq('user_id', uid);
+
+    state.topics = {};
+    (topics || []).forEach(t => {
+      state.topics[t.id] = {
+        id: t.id, name: t.name, tags: t.tags || [],
+        courseId: t.course_id, createdAt: new Date(t.created_at).getTime(),
+        tests: (tests || []).filter(te => te.topic_id === t.id).map(te => ({
+          id: te.id, type: te.type, score: te.score,
+          duration: te.duration, explanation: te.explanation,
+          checks: te.checks, subtopics: te.subtopics,
+          details: te.details, date: te.date
+        }))
+      };
+    });
+
+    // Pull quizzes
+    const { data: quizzes } = await supabase.from('quizzes').select('*').eq('user_id', uid);
+    state.quizzes = {};
+    (quizzes || []).forEach(q => {
+      state.quizzes[q.id] = { id: q.id, name: q.name, questions: q.questions };
+    });
+
+    // Pull settings
+    const { data: settings } = await supabase.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
+    if (settings) {
+      state.theme = settings.dark_mode ? 'dark' : 'light';
+      state.hasSeenWelcome = settings.has_seen_welcome;
+    }
+
+    saveStateLocal();
+    showSyncIndicator(false);
+    return true;
+  } catch(e) {
+    console.error('[Cloud] Pull failed:', e);
+    showSyncIndicator(false, '加载失败');
+    return false;
+  }
+}
+
+// 防抖推送 — 数据变化后 2 秒自动同步
+function cloudSyncDebounced() {
+  if (!isOnlineMode || !currentUser) return;
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => cloudPushAll(), 2000);
+}
+
+// 同步指示器
+function showSyncIndicator(show, text) {
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  if (show) {
+    el.style.display = 'flex';
+    el.querySelector('.sync-text').textContent = text || '同步中...';
+  } else {
+    if (text) {
+      el.querySelector('.sync-text').textContent = text;
+      setTimeout(() => { el.style.display = 'none'; }, 2000);
+    } else {
+      el.style.display = 'none';
+    }
+  }
+}
+
+/* ----- 认证 UI ----- */
+let authTab = 'login';
+
+function switchAuthTab(tab) {
+  authTab = tab;
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('auth-submit').textContent = tab === 'login' ? '登录' : '注册';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function showAuthOverlay() {
+  document.getElementById('auth-overlay').style.display = 'flex';
+}
+
+function hideAuthOverlay() {
+  document.getElementById('auth-overlay').style.display = 'none';
+}
+
+async function handleAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-submit');
+
+  if (!email || !password) {
+    errEl.textContent = '请填写邮箱和密码';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = '密码至少 6 位';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '处理中...';
+  errEl.style.display = 'none';
+
+  try {
+    if (authTab === 'login') {
+      const { data, error } = await signIn(email, password);
+      if (error) throw error;
+      currentUser = data.user;
+    } else {
+      const { data, error } = await signUp(email, password);
+      if (error) throw error;
+      if (!data.session) {
+        // 需要确认邮箱
+        errEl.textContent = '注册成功！请检查邮箱确认链接，然后回来登录。';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '登录';
+        return;
+      }
+      currentUser = data.user;
+    }
+
+    isOnlineMode = true;
+    hideAuthOverlay();
+
+    // 拉取云端数据
+    const pulled = await cloudPullAll();
+    if (!pulled) {
+      // 云端没数据，把本地数据推上去
+      await cloudPushAll();
+    }
+
+    applyTheme();
+    navigate('home');
+    updateUserInfo();
+    toast('☁️ 已连接云端');
+  } catch(e) {
+    errEl.textContent = e.message || '操作失败';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = authTab === 'login' ? '登录' : '注册';
+  }
+}
+
+function updateUserInfo() {
+  if (currentUser) {
+    const settingsNav = document.querySelector('[data-nav="settings"]');
+    if (settingsNav) {
+      settingsNav.querySelector('.nav-icon').textContent = '👤';
+    }
+  }
+}
+
+function useLocalOnly() {
+  isOnlineMode = false;
+  hideAuthOverlay();
+  loadStateLocal();
+  applyTheme();
+  navigate('home');
+  toast('📱 离线模式（数据仅保存在本地）');
+}
+
+/* ============================================================
+   STATE MANAGEMENT — 兼容云端
+   ============================================================ */
+let state = {
+  topics: {},       // { id: { id, name, courseId: null, tags: [], createdAt, tests: [] } }
+  quizzes: {},      // { id: { id, name, questions, createdAt } }
+  courses: {},      // { id: { id, name, semester, color, examDate, createdAt } }
+  semesters: [],    // [{ id, name }]
+  theme: 'light',
+  currentView: 'home',
+  currentTopicDetail: null,
+  currentSemester: null,
+  feynmanDraft: null,
+  recallDraft: null,
+  quizDraft: null,
+  overviewFilter: 'all',  // all, course, tag
+  overviewSearch: '',
+  hasSeenWelcome: false
+};
+
+const STORAGE_KEY = 'selftest_v3';
+
+const COURSE_COLORS = ['#6366f1','#f59e0b','#10b981','#ec4899','#06b6d4','#8b5cf6','#ef4444','#14b8a6'];
+
+function loadStateLocal() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const p = JSON.parse(saved);
+      state.topics = p.topics || {};
+      state.quizzes = p.quizzes || {};
+      state.courses = p.courses || {};
+      state.semesters = p.semesters || [];
+      state.theme = p.theme || 'light';
+      state.hasSeenWelcome = p.hasSeenWelcome || false;
+      if (state.semesters.length === 0) {
+        state.semesters = [{ id: 'default', name: '默认学期' }];
+      }
+    }
+  } catch(e) { console.error('Load failed:', e); }
+}
+
+function saveStateLocal() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      topics: state.topics,
+      quizzes: state.quizzes,
+      courses: state.courses,
+      semesters: state.semesters,
+      theme: state.theme,
+      hasSeenWelcome: state.hasSeenWelcome
+    }));
+  } catch(e) { console.error('Save failed:', e); }
+}
+
+// 兼容旧调用名
+function loadState() { loadStateLocal(); }
+
+function saveState() {
+  saveStateLocal();
+  // 如果在线，防抖推送到云端
+  if (isOnlineMode && currentUser) {
+    cloudSyncDebounced();
+  }
+}
+
+function uid() { return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 1800);
+  setTimeout(() => t.remove(), 2200);
+}
+
+function showModal(title, body, actions) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-title">${title}</div>
+      <div class="modal-body">${body}</div>
+      <div class="modal-actions">${actions.map((a,i) =>
+        `<button class="btn ${a.cls||'btn-secondary'}" style="flex:1" data-action="${i}">${a.label}</button>`
+      ).join('')}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll('[data-action]').forEach(btn => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.action);
+      overlay.remove();
+      if (actions[idx].onClick) actions[idx].onClick();
+    };
+  });
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+/* ============================================================
+   CONFETTI
+   ============================================================ */
+function celebrate() {
+  const colors = ['#6366f1','#8b5cf6','#f59e0b','#10b981','#ec4899','#06b6d4'];
+  for (let i = 0; i < 30; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + '%';
+      piece.style.top = '20%';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      piece.style.animationDuration = (1.5 + Math.random()) + 's';
+      piece.style.animationDelay = (Math.random() * 0.3) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 2500);
+    }, i * 30);
+  }
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.getElementById('themeToggle').textContent = state.theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(); saveState();
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function navigate(view) {
+  state.currentView = view;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.nav === view);
+  });
+  const container = document.getElementById('view-container');
+  container.className = '';
+  void container.offsetWidth;
+  switch(view) {
+    case 'home': container.innerHTML = renderHome(); break;
+    case 'test': container.innerHTML = renderTestHub(); break;
+    case 'feynman':
+      if (feynmanTimerInterval) { clearInterval(feynmanTimerInterval); feynmanTimerInterval = null; }
+      container.innerHTML = renderFeynman();
+      if (state.feynmanDraft?.phase === 'write') startFeynmanTimer();
+      break;
+    case 'recall': container.innerHTML = renderRecall(); break;
+    case 'quiz': container.innerHTML = renderQuiz(); break;
+    case 'overview': container.innerHTML = renderOverview(); break;
+    case 'schedule': container.innerHTML = renderSchedule(); break;
+    case 'settings': container.innerHTML = renderSettings(); break;
+    case 'topicDetail':
+      container.innerHTML = renderTopicDetail(state.currentTopicDetail);
+      break;
+    case 'courseDetail':
+      container.innerHTML = renderCourseDetail(state.currentCourseDetail);
+      break;
+  }
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+function navigateToTopic(topicId) {
+  state.currentTopicDetail = topicId;
+  navigate('topicDetail');
+}
+
+function navigateToCourse(courseId) {
+  state.currentCourseDetail = courseId;
+  navigate('courseDetail');
+}
+
+/* ============================================================
+   DATA HELPERS
+   ============================================================ */
+function getAllTopics() { return Object.values(state.topics).sort((a,b) => b.createdAt - a.createdAt); }
+function getOrCreateTopic(name, courseId) {
+  name = name.trim();
+  let topic = Object.values(state.topics).find(t => t.name === name);
+  if (!topic) {
+    topic = { id: uid(), name, courseId: courseId || null, tags: [], createdAt: Date.now(), tests: [] };
+    state.topics[topic.id] = topic;
+  } else if (courseId && !topic.courseId) {
+    topic.courseId = courseId;
+  }
+  return topic;
+}
+function getTopicTests(topicId) { return state.topics[topicId]?.tests || []; }
+function getTopicMastery(topicId) {
+  const tests = getTopicTests(topicId);
+  if (!tests.length) return 0;
+  const weights = tests.map((_, i) => i + 1);
+  const totalW = weights.reduce((a,b) => a+b, 0);
+  const weighted = tests.map((t, i) => t.score * weights[i]).reduce((a,b) => a+b, 0);
+  return Math.round(weighted / totalW);
+}
+function getAllTests() {
+  return Object.values(state.topics).flatMap(t => t.tests.map(test => ({...test, topicName: t.name, topicId: t.id})));
+}
+function getAllQuizzes() { return Object.values(state.quizzes).sort((a,b) => b.createdAt - a.createdAt); }
+function getCourses(semester) { return Object.values(state.courses).filter(c => c.semester === semester).sort((a,b) => a.createdAt - b.createdAt); }
+function getCourseTopics(courseId) { return Object.values(state.topics).filter(t => t.courseId === courseId).sort((a,b) => b.createdAt - a.createdAt); }
+function getCourseMastery(courseId) {
+  const topics = getCourseTopics(courseId);
+  if (!topics.length) return 0;
+  const masteries = topics.map(t => getTopicMastery(t.id));
+  return Math.round(masteries.reduce((a,b) => a+b, 0) / masteries.length);
+}
+function getAllTags() {
+  const tagSet = new Set();
+  Object.values(state.topics).forEach(t => (t.tags || []).forEach(tag => tagSet.add(tag)));
+  return Array.from(tagSet).sort();
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff/86400000) + '天前';
+  return `${d.getMonth()+1}月${d.getDate()}日`;
+}
+function formatDateFull(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function scoreColor(score) {
+  if (score >= 80) return 'var(--success)';
+  if (score >= 50) return 'var(--accent)';
+  return 'var(--danger)';
+}
+function masteryEmoji(score) {
+  if (score >= 85) return '🌟';
+  if (score >= 65) return '✅';
+  if (score >= 40) return '🤔';
+  return '❌';
+}
+function masteryLabel(score) {
+  if (score >= 85) return '真正掌握了';
+  if (score >= 65) return '基本掌握';
+  if (score >= 40) return '需要巩固';
+  return '还没学会';
+}
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function typeName(type) { return { feynman: '费曼', recall: '回忆', quiz: '闯关' }[type] || type; }
+function getExamStatus(examDate) {
+  if (!examDate) return null;
+  const days = Math.ceil((examDate - Date.now()) / 86400000);
+  if (days < 0) return { label: '已结束', cls: '', days };
+  if (days === 0) return { label: '今天考试', cls: 'soon', days };
+  if (days <= 7) return { label: `${days}天后`, cls: 'soon', days };
+  if (days <= 30) return { label: `${days}天后`, cls: 'far', days };
+  return { label: `${days}天后`, cls: 'far', days };
+}
+
+/* ============================================================
+   HOME VIEW
+   ============================================================ */
+function renderHome() {
+  const topics = getAllTopics();
+  const allTests = getAllTests();
+  const totalTests = allTests.length;
+  const masteredCount = topics.filter(t => getTopicMastery(t.id) >= 65).length;
+  const courseCount = Object.keys(state.courses).length;
+
+  // Weekly stats
+  const now = new Date();
+  const weekAgo = now.getTime() - 7 * 86400000;
+  const weekTests = allTests.filter(t => t.date >= weekAgo);
+  const weekAvg = weekTests.length > 0 ? Math.round(weekTests.reduce((s,t) => s+t.score, 0) / weekTests.length) : 0;
+
+  // Weekly bars
+  const dayLabels = ['日','一','二','三','四','五','六'];
+  const today = now.getDay();
+  const weekBars = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86400000);
+    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const dayEnd = dayStart + 86400000;
+    const count = allTests.filter(t => t.date >= dayStart && t.date < dayEnd).length;
+    const isToday = i === 0;
+    const labelIdx = d.getDay();
+    weekBars.push({ count, isToday, label: dayLabels[labelIdx] });
+  }
+  const maxCount = Math.max(...weekBars.map(b => b.count), 1);
+
+  const weekBarsHtml = weekBars.map(b => `
+    <div class="weekly-bar ${b.count > 0 ? 'has-data' : ''} ${b.isToday ? 'today' : ''}"
+         style="height:${Math.max(3, (b.count / maxCount) * 24)}px"></div>
+  `).join('');
+  const weekLabelsHtml = weekBars.map(b => `<div class="weekly-bar-label">${b.label}</div>`).join('');
+
+  // Review reminders (forgetting curve)
+  const reviewTopics = topics.filter(t => {
+    const tests = getTopicTests(t.id);
+    if (!tests.length) return false;
+    const lastTest = tests[tests.length - 1];
+    const daysSince = (Date.now() - lastTest.date) / 86400000;
+    if (lastTest.score < 65 && daysSince >= 1) return true;
+    if (lastTest.score < 85 && daysSince >= 3) return true;
+    if (daysSince >= 7) return true;
+    return false;
+  }).slice(0, 3);
+
+  const welcomeHtml = (!state.hasSeenWelcome && totalTests === 0) ? `
+    <div class="welcome-card stagger-1">
+      <div class="wc-close" onclick="dismissWelcome()">✕</div>
+      <h3>👋 欢迎来到「学会了吗？」</h3>
+      <p>别自我感觉良好，也别怕暴露无知。这里有三种诚实的检测方式：</p>
+      <div class="wc-steps">
+        <div class="wc-step"><span class="wc-step-num">1</span><span><strong>费曼讲解法</strong> — 用大白话讲清楚一个概念，讲不清就是没懂</span></div>
+        <div class="wc-step"><span class="wc-step-num">2</span><span><strong>主动回忆</strong> — 不看资料默写，诚实面对自己的记忆盲区</span></div>
+        <div class="wc-step"><span class="wc-step-num">3</span><span><strong>自测闯关</strong> — 自己出题考自己，逐题对照打分</span></div>
+      </div>
+      <div style="margin-top:10px;font-size:13px;color:var(--primary)">
+        💡 新增：去「课程」页面创建你的大学课程表，把自测主题关联到课程！
+      </div>
+    </div>
+  ` : '';
+
+  let recentHtml = '';
+  if (allTests.length > 0) {
+    const recent = allTests.sort((a,b) => b.date - a.date).slice(0, 5);
+    recentHtml = recent.map((t,i) => `
+      <div class="topic-item stagger-${Math.min(i+2, 6)}" onclick="navigateToTopic('${t.topicId}')">
+        <div class="topic-icon" style="background:${t.type === 'feynman' ? 'var(--accent-light)' : t.type === 'recall' ? 'var(--primary-light)' : 'var(--success-light)'}">
+          ${t.type === 'feynman' ? '💡' : t.type === 'recall' ? '🧠' : '🎯'}
+        </div>
+        <div class="topic-info">
+          <div class="topic-name">${esc(t.topicName)}</div>
+          <div class="topic-meta"><span class="tag tag-${t.type}">${typeName(t.type)}</span> ${formatDate(t.date)}</div>
+        </div>
+        <div class="quick-btn" onclick="event.stopPropagation();quickRetest('${t.topicId}','${t.type}')" title="快速重测">🔄</div>
+        <div style="text-align:right;margin-left:4px">
+          <div style="font-size:18px;font-weight:800;color:${scoreColor(t.score)}">${t.score}</div>
+          <div class="text-xs text-faint">分</div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    recentHtml = `
+      <div class="empty-state">
+        <div class="emoji">🌱</div>
+        <div class="text">还没有测试记录</div>
+        <div class="sub">选一个模式开始第一次诚实的自检吧</div>
+      </div>`;
+  }
+
+  return `
+    ${welcomeHtml}
+    <div class="hero-card stagger-1">
+      <span class="hero-emoji">🔍</span>
+      <h2>嘿，真的学会了吗？</h2>
+      <p>别自我感觉良好，用三种方法诚实地检验一下</p>
+    </div>
+
+    ${weekTests.length > 0 ? `
+      <div class="weekly-card stagger-2">
+        <div class="weekly-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="22" fill="none" stroke="var(--border)" stroke-width="6"/>
+            <circle cx="28" cy="28" r="22" fill="none" stroke="var(--primary)" stroke-width="6"
+                    stroke-dasharray="${2*Math.PI*22}" stroke-dashoffset="${2*Math.PI*22*(1-weekAvg/100)}"
+                    stroke-linecap="round" style="transition:stroke-dashoffset 1s var(--ease-out)"/>
+          </svg>
+          <div class="ring-label" style="color:${scoreColor(weekAvg)}">${weekAvg}</div>
+        </div>
+        <div class="weekly-info">
+          <div class="weekly-title">本周概况</div>
+          <div class="weekly-detail">${weekTests.length} 次检测 · 平均 ${weekAvg} 分</div>
+          <div class="weekly-bars">${weekBarsHtml}</div>
+          <div class="weekly-bar-labels">${weekLabelsHtml}</div>
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="stats-row stagger-2">
+      <div class="stat-card" style="--stat-color:var(--primary)">
+        <div class="stat-num" style="color:var(--primary)">${topics.length}</div>
+        <div class="stat-label">学习主题</div>
+      </div>
+      <div class="stat-card" style="--stat-color:var(--accent)">
+        <div class="stat-num" style="color:var(--accent)">${totalTests}</div>
+        <div class="stat-label">检测次数</div>
+      </div>
+      <div class="stat-card" style="--stat-color:var(--success)">
+        <div class="stat-num" style="color:var(--success)">${masteredCount}</div>
+        <div class="stat-label">已掌握</div>
+      </div>
+    </div>
+
+    ${reviewTopics.length > 0 ? `
+      <div class="section-title">🔔 该复习了</div>
+      <div class="card stagger-3" style="border-left:4px solid var(--accent)">
+        ${reviewTopics.map(t => {
+          const tests = getTopicTests(t.id);
+          const last = tests[tests.length-1];
+          const mastery = getTopicMastery(t.id);
+          return `
+            <div class="topic-item" style="margin-bottom:8px" onclick="navigateToTopic('${t.id}')">
+              <div class="topic-icon" style="background:${scoreColor(mastery)==='var(--success)'?'var(--success-light)':scoreColor(mastery)==='var(--accent)'?'var(--accent-light)':'var(--danger-light)'}">${masteryEmoji(mastery)}</div>
+              <div class="topic-info">
+                <div class="topic-name">${esc(t.name)}</div>
+                <div class="topic-meta">上次 ${last.score} 分 · ${formatDate(last.date)}</div>
+              </div>
+              <div class="quick-btn" onclick="event.stopPropagation();quickRetest('${t.id}','${last.type}')" title="快速重测">🔄</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    ` : ''}
+
+    <div class="section-title">选择检测方式</div>
+    <div class="mode-grid">
+      <div class="mode-card stagger-3" onclick="navigate('feynman')" style="--mode-accent:var(--accent)">
+        <span class="mode-tag" style="background:var(--accent-light);color:var(--accent)">推荐</span>
+        <span class="mode-icon">💡</span>
+        <div class="mode-name">费曼讲解法</div>
+        <div class="mode-desc">用大白话讲清楚，讲不清就是没懂</div>
+      </div>
+      <div class="mode-card stagger-3" onclick="navigate('recall')" style="--mode-accent:var(--primary)">
+        <span class="mode-tag" style="background:var(--primary-light);color:var(--primary)">高效</span>
+        <span class="mode-icon">🧠</span>
+        <div class="mode-name">主动回忆</div>
+        <div class="mode-desc">不看资料默写，诚实面对自己</div>
+      </div>
+      <div class="mode-card stagger-4" onclick="navigate('quiz')" style="--mode-accent:var(--success)">
+        <span class="mode-icon">🎯</span>
+        <div class="mode-name">自测闯关</div>
+        <div class="mode-desc">自己出题考自己，逐题判分</div>
+      </div>
+      <div class="mode-card stagger-4" onclick="navigate('schedule')" style="--mode-accent:var(--info)">
+        <span class="mode-icon">📅</span>
+        <div class="mode-name">课程表</div>
+        <div class="mode-desc">按课程管理自测主题</div>
+      </div>
+    </div>
+
+    <div class="section-title">最近检测</div>
+    <div>${recentHtml}</div>
+  `;
+}
+
+function dismissWelcome() {
+  state.hasSeenWelcome = true;
+  saveState();
+  navigate('home');
+}
+
+function quickRetest(topicId, type) {
+  const topic = state.topics[topicId];
+  if (!topic) return;
+  if (type === 'feynman') startFeynman(topic.name);
+  else if (type === 'recall') {
+    const recallTests = topic.tests.filter(t => t.type === 'recall');
+    if (recallTests.length > 0 && recallTests[recallTests.length-1].subtopics) {
+      const subs = recallTests[recallTests.length-1].subtopics.map(s => s.name);
+      startRecall(topic.name, subs);
+    } else {
+      startRecall(topic.name, ['核心概念','关键要点','应用场景']);
+    }
+  } else if (type === 'quiz') {
+    const quiz = Object.values(state.quizzes).find(q => q.name === topic.name);
+    if (quiz) startQuizTake(quiz.id);
+    else navigate('quiz');
+  }
+}
+
+/* ============================================================
+   TEST HUB (检测中心)
+   ============================================================ */
+function renderTestHub() {
+  return `
+    <div class="card stagger-1">
+      <div style="font-size:36px;margin-bottom:8px">🎯</div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">检测中心</h2>
+      <p class="text-muted text-sm" style="margin-bottom:16px">
+        选择一种方式，诚实地检验自己是否真的学会了。
+      </p>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card stagger-2" onclick="navigate('feynman')" style="--mode-accent:var(--accent)">
+        <span class="mode-tag" style="background:var(--accent-light);color:var(--accent)">推荐</span>
+        <span class="mode-icon">💡</span>
+        <div class="mode-name">费曼讲解法</div>
+        <div class="mode-desc">用大白话讲清楚，讲不清就是没懂</div>
+      </div>
+      <div class="mode-card stagger-2" onclick="navigate('recall')" style="--mode-accent:var(--primary)">
+        <span class="mode-tag" style="background:var(--primary-light);color:var(--primary)">高效</span>
+        <span class="mode-icon">🧠</span>
+        <div class="mode-name">主动回忆</div>
+        <div class="mode-desc">不看资料默写，诚实面对自己</div>
+      </div>
+      <div class="mode-card stagger-3" onclick="navigate('quiz')" style="--mode-accent:var(--success)">
+        <span class="mode-icon">🎯</span>
+        <div class="mode-name">自测闯关</div>
+        <div class="mode-desc">自己出题考自己，逐题判分</div>
+      </div>
+      <div class="mode-card stagger-3" onclick="navigate('home')" style="--mode-accent:var(--primary)">
+        <span class="mode-icon">🏠</span>
+        <div class="mode-name">回到首页</div>
+        <div class="mode-desc">查看你的学习数据</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   FEYNMAN TEST
+   ============================================================ */
+const feynmanPrompts = [
+  '💡 试试从"它解决了什么问题"开始讲',
+  '💡 用一个生活中的类比来解释',
+  '💡 想象你在给一个初中生讲解',
+  '💡 先说结论，再说为什么',
+  '💡 试着举一个具体的例子',
+  '💡 如果只能用三句话，你会怎么说？',
+  '💡 先说"是什么"，再说"不是什么"',
+];
+
+const feynmanChecks = [
+  { text: '我没有使用任何没解释的专业术语', neg: '用了一些没解释的术语' },
+  { text: '我在讲解中没有卡住或含糊其辞', neg: '有几处含糊' },
+  { text: '我举了具体的例子来说明', neg: '没举例子' },
+  { text: '我能解释"为什么是这样"，而不只是"是什么"', neg: '只讲了是什么' },
+  { text: '我能用类比或比喻帮助理解', neg: '没有用类比' },
+  { text: '我知道这个知识的适用边界（什么时候不能用）', neg: '没提适用边界' },
+  { text: '一个完全不懂的人看我的讲解能大致明白', neg: '外人可能看不懂' },
+];
+
+function renderFeynman() {
+  if (state.feynmanDraft?.phase === 'write') return renderFeynmanWrite();
+  if (state.feynmanDraft?.phase === 'check') return renderFeynmanCheck();
+  if (state.feynmanDraft?.phase === 'result') return renderFeynmanResult();
+
+  const topics = getAllTopics();
+  const topicChips = topics.slice(0, 6).map(t =>
+    `<span class="chip" style="cursor:pointer" onclick="startFeynman('${esc(t.name)}')">${esc(t.name)}</span>`
+  ).join('');
+
+  return `
+    <div class="card stagger-1">
+      <div style="font-size:36px;margin-bottom:8px">💡</div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">费曼讲解法</h2>
+      <p class="text-muted text-sm" style="margin-bottom:16px">
+        费曼说：如果你不能用简单的话向别人讲清楚一个概念，说明你并没有真正理解它。<br><br>
+        规则很简单：输入你要检验的主题，然后<strong>假装在向一个完全不懂的人讲解</strong>。写完之后，诚实地回答几个问题。
+      </p>
+      <div class="form-group">
+        <label class="form-label">你要检验什么？</label>
+        <input class="form-input" id="feynman-topic" placeholder="如：React Hooks、边际效用、线粒体..."
+               onkeydown="if(event.key==='Enter')startFeynmanFromInput()">
+        ${topicChips ? `<div class="form-hint">或选择已有主题：</div><div class="chip-list">${topicChips}</div>` : ''}
+      </div>
+      <button class="btn btn-primary" onclick="startFeynmanFromInput()">开始讲解</button>
+    </div>
+    <div class="card stagger-2">
+      <div class="section-title" style="margin-top:0">📋 费曼检测流程</div>
+      <div style="font-size:13px;color:var(--text-2);line-height:1.8">
+        <div><strong>1.</strong> 输入主题</div>
+        <div><strong>2.</strong> 不看任何资料，用自己的话把概念讲清楚</div>
+        <div><strong>3.</strong> 完成后，回答 7 个自检问题</div>
+        <div><strong>4.</strong> 系统给出「真正学会分数」</div>
+      </div>
+    </div>
+  `;
+}
+
+function startFeynmanFromInput() {
+  const topic = document.getElementById('feynman-topic')?.value.trim();
+  if (!topic) { toast('请先输入要检验的主题'); return; }
+  startFeynman(topic);
+}
+
+function startFeynman(topicName) {
+  state.feynmanDraft = {
+    topic: topicName, explanation: '',
+    checks: [false,false,false,false,false,false,false],
+    phase: 'write', startTime: Date.now(),
+    promptIdx: Math.floor(Math.random() * feynmanPrompts.length)
+  };
+  navigate('feynman');
+}
+
+function renderFeynmanWrite() {
+  const d = state.feynmanDraft;
+  const elapsed = d.startTime ? Math.floor((Date.now() - d.startTime) / 1000) : 0;
+  return `
+    <div class="card stagger-1">
+      <div class="flex-between mb-16">
+        <div>
+          <div class="text-xs text-faint">正在检验</div>
+          <div style="font-size:18px;font-weight:800">${esc(d.topic)}</div>
+        </div>
+        <div class="timer-bar" id="feynman-timer">
+          <span class="timer-dot active"></span>
+          <span id="feynman-time">${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}</span>
+        </div>
+      </div>
+      <div class="writing-prompt" id="writing-prompt">
+        <span class="prompt-icon">${feynmanPrompts[d.promptIdx].split(' ')[0]}</span>
+        <span>${feynmanPrompts[d.promptIdx].substring(2)}</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📝 不看资料，用大白话讲清楚这个概念</label>
+        <p class="text-xs text-faint mb-8">假设你在向一个完全不懂的人讲解。用你自己的话，别复制粘贴。</p>
+        <textarea class="form-textarea" id="feynman-text" placeholder="开始写你的讲解..."
+                  style="min-height:240px" oninput="updateFeynmanText()">${esc(d.explanation)}</textarea>
+        <div class="word-count-bar">
+          <span class="text-faint">💡 写够 100 字更有说服力</span>
+          <span><span class="wc-num" id="feynman-wc">${d.explanation.length}</span> 字</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="submitFeynmanWrite()">完成讲解，进入自检</button>
+      <button class="btn btn-ghost mt-8" onclick="cancelFeynman()">放弃</button>
+    </div>
+  `;
+}
+
+function updateFeynmanText() {
+  const el = document.getElementById('feynman-text');
+  state.feynmanDraft.explanation = el.value;
+  const wc = document.getElementById('feynman-wc');
+  if (wc) wc.textContent = el.value.length;
+}
+
+let feynmanTimerInterval = null;
+function startFeynmanTimer() {
+  if (feynmanTimerInterval) clearInterval(feynmanTimerInterval);
+  feynmanTimerInterval = setInterval(() => {
+    if (state.currentView !== 'feynman' || !state.feynmanDraft || state.feynmanDraft.phase !== 'write') {
+      clearInterval(feynmanTimerInterval);
+      feynmanTimerInterval = null;
+      return;
+    }
+    const elapsed = Math.floor((Date.now() - state.feynmanDraft.startTime) / 1000);
+    const el = document.getElementById('feynman-time');
+    if (el) el.textContent = `${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function submitFeynmanWrite() {
+  const text = document.getElementById('feynman-text').value.trim();
+  if (text.length < 30) { toast('讲解太短了，至少写 30 个字吧'); return; }
+  state.feynmanDraft.explanation = text;
+  state.feynmanDraft.phase = 'check';
+  navigate('feynman');
+}
+
+function renderFeynmanCheck() {
+  const d = state.feynmanDraft;
+  const checksHtml = feynmanChecks.map((c, i) => `
+    <div class="check-item ${d.checks[i] ? 'checked' : ''}" onclick="toggleFeynmanCheck(${i})">
+      <div class="check-circle">${d.checks[i] ? '✓' : ''}</div>
+      <div class="check-text">${c.text}</div>
+    </div>
+  `).join('');
+  return `
+    <div class="card stagger-1">
+      <div style="margin-bottom:16px">
+        <div class="text-xs text-faint">正在检验</div>
+        <div style="font-size:18px;font-weight:800">${esc(d.topic)}</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📖 你刚才写的讲解</label>
+        <div style="background:var(--card-2);border-radius:var(--radius-sm);padding:14px;font-size:14px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;border:1px solid var(--border)">${esc(d.explanation)}</div>
+      </div>
+      <div class="form-label">现在，诚实地问自己（共 7 项）：</div>
+      <div class="feynman-checklist">${checksHtml}</div>
+      <button class="btn btn-primary" onclick="submitFeynmanCheck()">查看结果</button>
+      <button class="btn btn-ghost mt-8" onclick="state.feynmanDraft.phase='write';navigate('feynman')">返回修改讲解</button>
+    </div>
+  `;
+}
+
+function toggleFeynmanCheck(idx) {
+  state.feynmanDraft.checks[idx] = !state.feynmanDraft.checks[idx];
+  navigate('feynman');
+}
+
+function submitFeynmanCheck() {
+  const d = state.feynmanDraft;
+  const passed = d.checks.filter(c => c).length;
+  let score = Math.round((passed / 7) * 75);
+  const len = d.explanation.length;
+  if (len > 200) score += 25;
+  else if (len > 100) score += 18;
+  else if (len > 50) score += 8;
+  score = Math.min(100, score);
+  d.score = score;
+  d.phase = 'result';
+  const topic = getOrCreateTopic(d.topic);
+  topic.tests.push({
+    id: uid(), type: 'feynman', date: Date.now(), score,
+    explanation: d.explanation, checks: [...d.checks],
+    duration: Math.round((Date.now() - d.startTime) / 1000)
+  });
+  saveState();
+  if (score >= 80) celebrate();
+  navigate('feynman');
+}
+
+function renderFeynmanResult() {
+  const d = state.feynmanDraft;
+  const score = d.score;
+  const passed = d.checks.filter(c => c).length;
+  const color = scoreColor(score);
+  const ringC = 2 * Math.PI * 42;
+  const ringO = ringC * (1 - score / 100);
+  return `
+    <div class="result-hero scale-in" style="background:${color}">
+      <div class="result-ring">
+        <svg width="110" height="110" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#fff" stroke-width="8"
+                  stroke-dasharray="${ringC}" stroke-dashoffset="${ringO}"
+                  stroke-linecap="round" style="transition:stroke-dashoffset 1.2s var(--ease-out)"/>
+        </svg>
+        <div class="ring-num" style="color:#fff">${score}</div>
+      </div>
+      <h2 style="color:#fff">${masteryEmoji(score)} ${masteryLabel(score)}</h2>
+      <p style="color:rgba(255,255,255,.85)">费曼讲解法 · ${esc(d.topic)}</p>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat"><div class="num" style="color:var(--success)">${passed}/7</div><div class="label">自检通过</div></div>
+      <div class="result-stat"><div class="num" style="color:var(--primary)">${d.explanation.length}</div><div class="label">字数</div></div>
+      <div class="result-stat"><div class="num" style="color:var(--accent)">${Math.round(d.duration/60)}:${String(d.duration%60).padStart(2,'0')}</div><div class="label">用时</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">📖 你的讲解</div>
+      <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--text-2)">${esc(d.explanation)}</div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">🔍 自检详情</div>
+      ${feynmanChecks.map((c, i) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:16px">${d.checks[i] ? '✅' : '❌'}</span>
+          <span style="font-size:13px;flex:1">${d.checks[i] ? c.text : c.neg}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">💡 下一步建议</div>
+      <div style="font-size:14px;line-height:1.8;color:var(--text-2)">${getNextStep(score, 'feynman')}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="navigate('home')">回到首页</button>
+      <button class="btn btn-primary" style="flex:1" onclick="restartFeynman()">再测一次</button>
+    </div>
+  `;
+}
+
+function restartFeynman() {
+  const topic = state.feynmanDraft.topic;
+  state.feynmanDraft = null;
+  startFeynman(topic);
+}
+function cancelFeynman() { state.feynmanDraft = null; navigate('home'); }
+
+/* ============================================================
+   RECALL TEST
+   ============================================================ */
+function renderRecall() {
+  if (state.recallDraft) return renderRecallStep();
+  const topics = getAllTopics();
+  const topicChips = topics.slice(0, 6).map(t =>
+    `<span class="chip" style="cursor:pointer" onclick="startRecall('${esc(t.name)}')">${esc(t.name)}</span>`
+  ).join('');
+  return `
+    <div class="card stagger-1">
+      <div style="font-size:36px;margin-bottom:8px">🧠</div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">主动回忆</h2>
+      <p class="text-muted text-sm" style="margin-bottom:16px">
+        认知科学证明：主动回忆（Active Recall）是最有效的学习方法之一。<br><br>
+        你要做的：<br>
+        <strong>1.</strong> 输入主题和几个子知识点<br>
+        <strong>2.</strong> 不看任何资料，逐个默写你记得的内容<br>
+        <strong>3.</strong> 写完后对照资料，诚实地给自己打分
+      </p>
+      <div class="form-group">
+        <label class="form-label">检验主题</label>
+        <input class="form-input" id="recall-topic" placeholder="如：JavaScript 闭包、法国大革命..."
+               onkeydown="if(event.key==='Enter')document.getElementById('recall-subtopics').focus()">
+        ${topicChips ? `<div class="chip-list">${topicChips}</div>` : ''}
+      </div>
+      <div class="form-group">
+        <label class="form-label">子知识点（每行一个，至少 2 个）</label>
+        <textarea class="form-textarea" id="recall-subtopics" placeholder="比如：&#10;什么是闭包&#10;闭包的使用场景&#10;闭包的内存问题" style="min-height:100px"></textarea>
+        <div class="form-hint">把大的主题拆成几个小的点来检验更有效</div>
+      </div>
+      <button class="btn btn-primary" onclick="startRecallFromInput()">开始回忆</button>
+    </div>
+  `;
+}
+
+function startRecallFromInput() {
+  const topic = document.getElementById('recall-topic').value.trim();
+  const raw = document.getElementById('recall-subtopics').value.trim();
+  if (!topic) { toast('请输入检验主题'); return; }
+  const subs = raw.split('\n').map(s => s.trim()).filter(s => s);
+  if (subs.length < 2) { toast('至少输入 2 个子知识点'); return; }
+  startRecall(topic, subs);
+}
+
+function startRecall(topicName, subtopics) {
+  state.recallDraft = {
+    topic: topicName,
+    subtopics: subtopics.map(s => ({ name: s, recall: '', grade: null, uncertain: false })),
+    currentIdx: 0, phase: 'recall', startTime: Date.now()
+  };
+  navigate('recall');
+}
+
+function renderRecallStep() {
+  const d = state.recallDraft;
+  const idx = d.currentIdx;
+  const sub = d.subtopics[idx];
+  const total = d.subtopics.length;
+
+  if (d.phase === 'recall') {
+    return `
+      <div class="card stagger-1">
+        <div class="flex-between mb-16">
+          <div>
+            <div class="text-xs text-faint">正在检验</div>
+            <div style="font-size:16px;font-weight:800">${esc(d.topic)}</div>
+          </div>
+          <div class="text-sm text-muted">${idx+1} / ${total}</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${(idx/total)*100}%"></div></div>
+        <div class="recall-step-indicator">
+          ${d.subtopics.map((s, i) => `
+            <div class="step-dot ${i === idx ? 'active' : ''} ${i < idx ? (s.uncertain ? 'uncertain' : 'done') : ''}"></div>
+          `).join('')}
+        </div>
+        <div class="recall-prompt-box">
+          <div class="prompt-label">不看资料，凭记忆写出你关于这个点所知道的一切：</div>
+          <div class="prompt-text">${esc(sub.name)}</div>
+        </div>
+        <div class="form-group">
+          <textarea class="form-textarea" id="recall-text-${idx}" placeholder="开始写你记得的内容..."
+                    style="min-height:180px" oninput="updateRecallText(${idx})">${esc(sub.recall)}</textarea>
+          <div class="word-count-bar">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="checkbox" id="recall-uncertain-${idx}" style="width:auto;cursor:pointer"
+                     ${sub.uncertain ? 'checked' : ''} onchange="toggleUncertain(${idx})">
+              <span class="text-faint">🤔 不太确定，待会重点对照</span>
+            </label>
+            <span><span class="wc-num" id="recall-wc-${idx}">${sub.recall.length}</span> 字</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="nextRecallStep()">写完了，下一步</button>
+        ${idx > 0 ? `<button class="btn btn-ghost mt-8" onclick="prevRecallStep()">上一个</button>` : ''}
+      </div>
+    `;
+  }
+
+  if (d.phase === 'grade') {
+    return `
+      <div class="card stagger-1">
+        <div class="flex-between mb-16">
+          <div>
+            <div class="text-xs text-faint">对照评估</div>
+            <div style="font-size:16px;font-weight:800">${esc(d.topic)}</div>
+          </div>
+          <div class="text-sm text-muted">${idx+1} / ${total}</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${((idx+1)/total)*100}%"></div></div>
+        <div class="recall-display-box">
+          <div class="box-label">你回忆的「${esc(sub.name)}」${sub.uncertain ? '<span style="color:var(--accent)"> · 🤔 标记了不确定</span>' : ''}：</div>
+          <div class="box-content">${sub.recall ? esc(sub.recall) : '<span class="text-faint">（你跳过了这个）</span>'}</div>
+        </div>
+        <p class="text-sm text-muted mb-8">现在对照你的笔记/教材/资料，诚实评估你刚才写的内容：</p>
+        <div class="grade-buttons">
+          <div class="grade-btn grade-good" onclick="gradeRecall(${idx}, 'good')">
+            <span class="grade-emoji">✅</span><span>确实掌握了</span>
+          </div>
+          <div class="grade-btn grade-mid" onclick="gradeRecall(${idx}, 'mid')">
+            <span class="grade-emoji">🤔</span><span>有点模糊</span>
+          </div>
+          <div class="grade-btn grade-bad" onclick="gradeRecall(${idx}, 'bad')">
+            <span class="grade-emoji">❌</span><span>完全不会</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (d.phase === 'result') return renderRecallResult();
+}
+
+function updateRecallText(idx) {
+  const el = document.getElementById(`recall-text-${idx}`);
+  if (el) {
+    state.recallDraft.subtopics[idx].recall = el.value;
+    const wc = document.getElementById(`recall-wc-${idx}`);
+    if (wc) wc.textContent = el.value.length;
+  }
+}
+
+function toggleUncertain(idx) {
+  state.recallDraft.subtopics[idx].uncertain = !state.recallDraft.subtopics[idx].uncertain;
+}
+
+function nextRecallStep() {
+  const d = state.recallDraft;
+  updateRecallText(d.currentIdx);
+  const text = d.subtopics[d.currentIdx].recall.trim();
+  if (text.length < 10) { toast('再写一点吧，至少 10 个字'); return; }
+  if (d.currentIdx < d.subtopics.length - 1) {
+    d.currentIdx++;
+    navigate('recall');
+  } else {
+    d.currentIdx = 0;
+    d.phase = 'grade';
+    navigate('recall');
+  }
+}
+
+function prevRecallStep() {
+  const d = state.recallDraft;
+  if (d.currentIdx > 0) { d.currentIdx--; navigate('recall'); }
+}
+
+function gradeRecall(idx, grade) {
+  const d = state.recallDraft;
+  d.subtopics[idx].grade = grade;
+  if (d.currentIdx < d.subtopics.length - 1) {
+    d.currentIdx++;
+    navigate('recall');
+  } else {
+    const grades = d.subtopics.map(s => s.grade);
+    const good = grades.filter(g => g === 'good').length;
+    const mid = grades.filter(g => g === 'mid').length;
+    const total = grades.length;
+    const score = Math.round((good * 100 + mid * 50 + 0) / total);
+    d.score = score;
+    const topic = getOrCreateTopic(d.topic);
+    topic.tests.push({
+      id: uid(), type: 'recall', date: Date.now(), score,
+      subtopics: d.subtopics.map(s => ({ name: s.name, grade: s.grade, uncertain: s.uncertain, recallLength: s.recall.length })),
+      duration: Math.round((Date.now() - d.startTime) / 1000)
+    });
+    saveState();
+    if (score >= 80) celebrate();
+    d.phase = 'result';
+    navigate('recall');
+  }
+}
+
+function renderRecallResult() {
+  const d = state.recallDraft;
+  const score = d.score;
+  const color = scoreColor(score);
+  const ringC = 2 * Math.PI * 42;
+  const ringO = ringC * (1 - score / 100);
+  const good = d.subtopics.filter(s => s.grade === 'good').length;
+  const mid = d.subtopics.filter(s => s.grade === 'mid').length;
+  const bad = d.subtopics.filter(s => s.grade === 'bad').length;
+  const uncertain = d.subtopics.filter(s => s.uncertain).length;
+  return `
+    <div class="result-hero scale-in" style="background:${color}">
+      <div class="result-ring">
+        <svg width="110" height="110" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#fff" stroke-width="8"
+                  stroke-dasharray="${ringC}" stroke-dashoffset="${ringO}"
+                  stroke-linecap="round" style="transition:stroke-dashoffset 1.2s var(--ease-out)"/>
+        </svg>
+        <div class="ring-num" style="color:#fff">${score}</div>
+      </div>
+      <h2 style="color:#fff">${masteryEmoji(score)} ${masteryLabel(score)}</h2>
+      <p style="color:rgba(255,255,255,.85)">主动回忆 · ${esc(d.topic)}</p>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat"><div class="num" style="color:var(--success)">${good}</div><div class="label">确实掌握</div></div>
+      <div class="result-stat"><div class="num" style="color:var(--accent)">${mid}</div><div class="label">有点模糊</div></div>
+      <div class="result-stat"><div class="num" style="color:var(--danger)">${bad}</div><div class="label">完全不会</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">📋 知识点详情</div>
+      ${d.subtopics.map(s => `
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:16px;margin-top:1px">${s.grade === 'good' ? '✅' : s.grade === 'mid' ? '🤔' : '❌'}</span>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${esc(s.name)} ${s.uncertain ? '<span class="text-xs" style="color:var(--accent)">🤔 不确定</span>' : ''}</div>
+            <div class="text-xs text-faint mt-8">${s.recall ? `写了 ${s.recall.length} 字` : '跳过了'}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    ${uncertain > 0 ? `
+      <div class="card" style="border-left:4px solid var(--accent)">
+        <div style="font-size:13px;color:var(--text-2);line-height:1.7">
+          ⚠️ 你标记了 <strong>${uncertain}</strong> 个不确定的知识点，这些是你最该优先复习的地方。
+        </div>
+      </div>
+    ` : ''}
+    <div class="card">
+      <div class="section-title" style="margin-top:0">💡 下一步建议</div>
+      <div style="font-size:14px;line-height:1.8;color:var(--text-2)">${getNextStep(score, 'recall')}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="state.recallDraft=null;navigate('home')">回到首页</button>
+      <button class="btn btn-primary" style="flex:1" onclick="restartRecall()">再测一次</button>
+    </div>
+  `;
+}
+
+function restartRecall() {
+  const topic = state.recallDraft.topic;
+  const subs = state.recallDraft.subtopics.map(s => s.name);
+  state.recallDraft = null;
+  startRecall(topic, subs);
+}
+
+/* ============================================================
+   QUIZ MODE
+   ============================================================ */
+function renderQuiz() {
+  if (state.quizDraft?.phase === 'take') return renderQuizTake();
+  if (state.quizDraft?.phase === 'result') return renderQuizResult();
+  const quizzes = getAllQuizzes();
+  return `
+    <div class="card stagger-1">
+      <div style="font-size:36px;margin-bottom:8px">🎯</div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">自测闯关</h2>
+      <p class="text-muted text-sm" style="margin-bottom:16px">
+        自己当出题人，也自己当考生。<br>
+        好的出题本身就是一种学习——你得真正理解了，才能出好题。
+      </p>
+      <button class="btn btn-primary" onclick="showQuizCreator()">创建新题库</button>
+    </div>
+    ${quizzes.length > 0 ? `
+      <div class="section-title">已有题库</div>
+      ${quizzes.map((q,i) => `
+        <div class="card clickable stagger-${Math.min(i+2,6)}" onclick="startQuizTake('${q.id}')">
+          <div class="flex-between">
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:700">${esc(q.name)}</div>
+              <div class="text-xs text-faint mt-8">${q.questions.length} 题 · 创建于 ${formatDate(q.createdAt)}</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();startQuizTake('${q.id}')">开始</button>
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteQuiz('${q.id}')">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    ` : ''}
+  `;
+}
+
+let quizCreatorQuestions = [];
+
+function showQuizCreator() {
+  quizCreatorQuestions = [{ q: '', a: '' }];
+  navigate('quiz');
+  document.getElementById('view-container').innerHTML = renderQuizCreator();
+}
+
+function renderQuizCreator() {
+  return `
+    <div class="card stagger-1">
+      <div class="flex-between mb-16">
+        <h2 style="font-size:18px;font-weight:800">创建题库</h2>
+        <button class="btn btn-ghost btn-sm" onclick="navigate('quiz')">取消</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">题库名称</label>
+        <input class="form-input" id="quiz-name" placeholder="如：JS 基础概念、宏观经济学第一章">
+      </div>
+      <div class="section-title" style="margin-top:0">题目（至少 2 题）</div>
+      <div id="quiz-questions">
+        ${quizCreatorQuestions.map((q, i) => renderQuizQuestionRow(i, q)).join('')}
+      </div>
+      <button class="btn btn-secondary mt-8" onclick="addQuizQuestion()">+ 添加一题</button>
+      <hr class="divider">
+      <button class="btn btn-primary" onclick="saveQuiz()">保存并开始闯关</button>
+    </div>
+  `;
+}
+
+function renderQuizQuestionRow(idx, q) {
+  return `
+    <div class="card" style="background:var(--card-2);margin-bottom:10px" id="quiz-q-${idx}">
+      <div class="flex-between mb-8">
+        <span class="text-sm font-bold">第 ${idx+1} 题</span>
+        ${idx > 1 ? `<button class="btn btn-ghost btn-sm" onclick="removeQuizQuestion(${idx})">✕</button>` : ''}
+      </div>
+      <div class="form-group">
+        <label class="form-label">问题</label>
+        <input class="form-input" placeholder="输入问题..."
+               value="${esc(q.q)}" oninput="quizCreatorQuestions[${idx}].q=this.value">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">参考答案</label>
+        <textarea class="form-textarea" placeholder="输入参考答案..."
+                  style="min-height:70px" oninput="quizCreatorQuestions[${idx}].a=this.value">${esc(q.a)}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+function addQuizQuestion() {
+  quizCreatorQuestions.push({ q: '', a: '' });
+  document.getElementById('quiz-questions').insertAdjacentHTML('beforeend',
+    renderQuizQuestionRow(quizCreatorQuestions.length - 1, { q: '', a: '' }));
+}
+
+function removeQuizQuestion(idx) {
+  if (quizCreatorQuestions.length <= 2) { toast('至少保留 2 题'); return; }
+  quizCreatorQuestions.splice(idx, 1);
+  document.getElementById('view-container').innerHTML = renderQuizCreator();
+}
+
+function saveQuiz() {
+  const name = document.getElementById('quiz-name').value.trim();
+  if (!name) { toast('请输入题库名称'); return; }
+  const valid = quizCreatorQuestions.filter(q => q.q.trim() && q.a.trim());
+  if (valid.length < 2) { toast('至少完成 2 道题（含问题和答案）'); return; }
+  const quiz = {
+    id: uid(), name,
+    questions: valid.map(q => ({ id: uid(), q: q.q.trim(), a: q.a.trim() })),
+    createdAt: Date.now()
+  };
+  state.quizzes[quiz.id] = quiz;
+  saveState();
+  quizCreatorQuestions = [];
+  toast('题库已保存！');
+  startQuizTake(quiz.id);
+}
+
+function deleteQuiz(quizId) {
+  showModal('删除题库', '确定删除这个题库吗？此操作不可撤销。', [
+    { label: '取消', cls: 'btn-secondary' },
+    { label: '删除', cls: 'btn-danger', onClick: () => {
+      delete state.quizzes[quizId];
+      saveState();
+      navigate('quiz');
+      toast('题库已删除');
+    }}
+  ]);
+}
+
+function startQuizTake(quizId) {
+  const quiz = state.quizzes[quizId];
+  if (!quiz) return;
+  const shuffled = [...quiz.questions].sort(() => Math.random() - 0.5);
+  state.quizDraft = {
+    quizId, quizName: quiz.name,
+    questions: shuffled.map(q => ({ ...q, userAnswer: '', grade: null, revealed: false })),
+    currentIdx: 0, phase: 'take', startTime: Date.now()
+  };
+  navigate('quiz');
+}
+
+function renderQuizTake() {
+  const d = state.quizDraft;
+  const idx = d.currentIdx;
+  const q = d.questions[idx];
+  const total = d.questions.length;
+  return `
+    <div class="card stagger-1">
+      <div class="flex-between mb-16">
+        <div>
+          <div class="text-xs text-faint">${esc(d.quizName)}</div>
+          <div style="font-size:16px;font-weight:800">第 ${idx+1} 题 / 共 ${total} 题</div>
+        </div>
+        <div class="text-sm text-muted">${idx+1}/${total}</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(idx/total)*100}%"></div></div>
+      <div class="quiz-question">${esc(q.q)}</div>
+      <div class="form-group">
+        <label class="form-label">你的回答</label>
+        <textarea class="form-textarea" id="quiz-answer" placeholder="写出你的答案..." style="min-height:120px"
+                  oninput="state.quizDraft.questions[state.quizDraft.currentIdx].userAnswer=this.value">${esc(q.userAnswer)}</textarea>
+        <div class="word-count-bar">
+          <span class="text-faint">💡 认真写，别敷衍</span>
+          <span><span class="wc-num">${q.userAnswer.length}</span> 字</span>
+        </div>
+      </div>
+      ${!q.revealed ? `
+        <button class="btn btn-primary" onclick="revealQuizAnswer()">查看参考答案</button>
+      ` : `
+        <div class="quiz-answer-ref fade-in" style="margin-bottom:16px">
+          <div class="text-xs font-bold mb-8" style="color:var(--primary)">📖 参考答案</div>
+          ${esc(q.a)}
+        </div>
+        <p class="text-sm text-muted mb-8">对照参考答案，诚实地给自己打分：</p>
+        <div class="grade-buttons">
+          <div class="grade-btn grade-good" onclick="gradeQuiz('good')">
+            <span class="grade-emoji">✅</span><span>答对了</span>
+          </div>
+          <div class="grade-btn grade-mid" onclick="gradeQuiz('mid')">
+            <span class="grade-emoji">🤔</span><span>部分对</span>
+          </div>
+          <div class="grade-btn grade-bad" onclick="gradeQuiz('bad')">
+            <span class="grade-emoji">❌</span><span>答错了</span>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function revealQuizAnswer() {
+  const d = state.quizDraft;
+  d.questions[d.currentIdx].userAnswer = document.getElementById('quiz-answer').value;
+  d.questions[d.currentIdx].revealed = true;
+  navigate('quiz');
+}
+
+function gradeQuiz(grade) {
+  const d = state.quizDraft;
+  d.questions[d.currentIdx].grade = grade;
+  if (d.currentIdx < d.questions.length - 1) {
+    d.currentIdx++;
+    navigate('quiz');
+  } else {
+    const grades = d.questions.map(q => q.grade);
+    const good = grades.filter(g => g === 'good').length;
+    const mid = grades.filter(g => g === 'mid').length;
+    const total = grades.length;
+    const score = Math.round((good * 100 + mid * 50) / total);
+    d.score = score;
+    const topic = getOrCreateTopic(d.quizName);
+    topic.tests.push({
+      id: uid(), type: 'quiz', date: Date.now(), score,
+      details: d.questions.map(q => ({ q: q.q, a: q.a, grade: q.grade })),
+      duration: Math.round((Date.now() - d.startTime) / 1000)
+    });
+    saveState();
+    if (score >= 80) celebrate();
+    d.phase = 'result';
+    navigate('quiz');
+  }
+}
+
+function renderQuizResult() {
+  const d = state.quizDraft;
+  const score = d.score;
+  const color = scoreColor(score);
+  const ringC = 2 * Math.PI * 42;
+  const ringO = ringC * (1 - score / 100);
+  const good = d.questions.filter(q => q.grade === 'good').length;
+  const mid = d.questions.filter(q => q.grade === 'mid').length;
+  const bad = d.questions.filter(q => q.grade === 'bad').length;
+  return `
+    <div class="result-hero scale-in" style="background:${color}">
+      <div class="result-ring">
+        <svg width="110" height="110" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#fff" stroke-width="8"
+                  stroke-dasharray="${ringC}" stroke-dashoffset="${ringO}"
+                  stroke-linecap="round" style="transition:stroke-dashoffset 1.2s var(--ease-out)"/>
+        </svg>
+        <div class="ring-num" style="color:#fff">${score}</div>
+      </div>
+      <h2 style="color:#fff">${masteryEmoji(score)} ${masteryLabel(score)}</h2>
+      <p style="color:rgba(255,255,255,.85)">闯关挑战 · ${esc(d.quizName)}</p>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat"><div class="num" style="color:var(--success)">${good}</div><div class="label">答对</div></div>
+      <div class="result-stat"><div class="num" style="color:var(--accent)">${mid}</div><div class="label">部分对</div></div>
+      <div class="result-stat"><div class="num" style="color:var(--danger)">${bad}</div><div class="label">答错</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">📋 逐题回顾</div>
+      ${d.questions.map((q, i) => `
+        <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:16px;margin-top:1px">${q.grade === 'good' ? '✅' : q.grade === 'mid' ? '🤔' : '❌'}</span>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:600;margin-bottom:4px">Q${i+1}. ${esc(q.q)}</div>
+              ${q.userAnswer ? `<div class="text-xs text-faint" style="margin-bottom:4px">你的回答：${esc(q.userAnswer.slice(0,80))}${q.userAnswer.length>80?'...':''}</div>` : ''}
+              <div class="text-xs" style="color:var(--primary)">参考答案：${esc(q.a)}</div>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">💡 下一步建议</div>
+      <div style="font-size:14px;line-height:1.8;color:var(--text-2)">${getNextStep(score, 'quiz')}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="state.quizDraft=null;navigate('home')">回到首页</button>
+      <button class="btn btn-primary" style="flex:1" onclick="restartQuiz()">再考一次</button>
+    </div>
+  `;
+}
+
+function restartQuiz() {
+  const quizId = state.quizDraft.quizId;
+  state.quizDraft = null;
+  startQuizTake(quizId);
+}
+
+/* ============================================================
+   COURSE SCHEDULE (课程表)
+   ============================================================ */
+function renderSchedule() {
+  const semesters = state.semesters;
+  if (state.currentSemester === null && semesters.length > 0) {
+    state.currentSemester = semesters[0].id;
+  }
+  const activeSemester = state.currentSemester || (semesters[0]?.id) || 'default';
+  state.currentSemester = activeSemester;
+  const courses = getCourses(activeSemester);
+
+  const semesterTabsHtml = semesters.map(s => `
+    <div class="semester-tab ${s.id === activeSemester ? 'active' : ''}" onclick="switchSemester('${s.id}')">${esc(s.name)}</div>
+  `).join('') + `<div class="semester-tab" onclick="showAddSemester()" style="color:var(--primary)">+ 学期</div>`;
+
+  let coursesHtml = '';
+  if (courses.length === 0) {
+    coursesHtml = `
+      <div class="empty-state">
+        <div class="emoji">📚</div>
+        <div class="text">这个学期还没有课程</div>
+        <div class="sub">点击下方按钮添加你的第一门课</div>
+      </div>
+    `;
+  } else {
+    coursesHtml = courses.map((c, i) => {
+      const mastery = getCourseMastery(c.id);
+      const topics = getCourseTopics(c.id);
+      const examStatus = getExamStatus(c.examDate);
+      return `
+        <div class="course-card stagger-${Math.min(i+1,6)}" style="--course-color:${c.color}" onclick="navigateToCourse('${c.id}')">
+          <div class="course-card-header">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="course-dot" style="background:${c.color}"></span>
+              <span class="course-name">${esc(c.name)}</span>
+            </div>
+            ${examStatus ? `<span class="exam-badge ${examStatus.cls}">📅 ${examStatus.label}</span>` : ''}
+          </div>
+          ${topics.length > 0 ? `
+            <div class="course-meta">
+              ${topics.length} 个主题 · ${topics.reduce((s,t) => s + getTopicTests(t.id).length, 0)} 次检测
+            </div>
+          ` : `
+            <div class="course-meta">还没有关联的自测主题</div>
+          `}
+          <div class="course-stats">
+            <div class="course-stat"><strong style="color:${scoreColor(mastery)}">${mastery}</strong>掌握度</div>
+            <div class="course-stat"><strong>${topics.length}</strong>主题数</div>
+            <div class="course-stat"><strong>${topics.reduce((s,t) => s + getTopicTests(t.id).length, 0)}</strong>检测数</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div class="card stagger-1">
+      <div class="flex-between">
+        <div>
+          <div style="font-size:20px;font-weight:800">📅 课程表</div>
+          <div class="text-xs text-faint mt-8">按学期管理课程，关联自测主题</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="showAddCourse()">+ 添加课程</button>
+      </div>
+    </div>
+    <div class="semester-tabs stagger-1">${semesterTabsHtml}</div>
+    ${coursesHtml}
+  `;
+}
+
+function switchSemester(semesterId) {
+  state.currentSemester = semesterId;
+  navigate('schedule');
+}
+
+function showAddSemester() {
+  const html = `
+    <div class="form-group">
+      <label class="form-label">学期名称</label>
+      <input class="form-input" id="new-semester-name" placeholder="如：2026秋、大三上" autofocus>
+    </div>
+  `;
+  showModal('添加学期', html, [
+    { label: '取消', cls: 'btn-secondary' },
+    { label: '添加', cls: 'btn-primary', onClick: () => {
+      const name = document.getElementById('new-semester-name')?.value.trim();
+      if (!name) { toast('请输入学期名称'); return; }
+      const sem = { id: uid(), name };
+      state.semesters.push(sem);
+      state.currentSemester = sem.id;
+      saveState();
+      navigate('schedule');
+      toast('学期已添加');
+    }}
+  ]);
+}
+
+function showAddCourse() {
+  const semesters = state.semesters;
+  const semOptions = semesters.map(s =>
+    `<option value="${s.id}" ${s.id === state.currentSemester ? 'selected' : ''}>${esc(s.name)}</option>`
+  ).join('');
+  const colorOptions = COURSE_COLORS.map((c, i) =>
+    `<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:4px">
+      <input type="radio" name="course-color" value="${c}" ${i===0?'checked':''} style="width:auto">
+      <span class="course-dot" style="background:${c};width:16px;height:16px"></span>
+    </label>`
+  ).join('');
+  const html = `
+    <div class="form-group">
+      <label class="form-label">课程名称</label>
+      <input class="form-input" id="new-course-name" placeholder="如：高等数学、大学英语" autofocus>
+    </div>
+    <div class="form-group">
+      <label class="form-label">所属学期</label>
+      <select class="form-input" id="new-course-semester" style="cursor:pointer">${semOptions}</select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">考试日期（可选）</label>
+      <input class="form-input" type="date" id="new-course-exam">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">颜色标记</label>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${colorOptions}</div>
+    </div>
+  `;
+  showModal('添加课程', html, [
+    { label: '取消', cls: 'btn-secondary' },
+    { label: '添加', cls: 'btn-primary', onClick: () => {
+      const name = document.getElementById('new-course-name')?.value.trim();
+      if (!name) { toast('请输入课程名称'); return; }
+      const semester = document.getElementById('new-course-semester')?.value;
+      const examDateStr = document.getElementById('new-course-exam')?.value;
+      const color = document.querySelector('input[name="course-color"]:checked')?.value || COURSE_COLORS[0];
+      const course = {
+        id: uid(), name, semester, color,
+        examDate: examDateStr ? new Date(examDateStr).getTime() : null,
+        createdAt: Date.now()
+      };
+      state.courses[course.id] = course;
+      saveState();
+      navigate('schedule');
+      toast('课程已添加');
+    }}
+  ]);
+}
+
+function renderCourseDetail(courseId) {
+  const course = state.courses[courseId];
+  if (!course) { navigate('schedule'); return ''; }
+  const topics = getCourseTopics(courseId);
+  const mastery = getCourseMastery(courseId);
+  const allTests = topics.flatMap(t => getTopicTests(t.id).map(test => ({...test, topicName: t.name, topicId: t.id})));
+  const examStatus = getExamStatus(course.examDate);
+
+  const topicsHtml = topics.length > 0 ? topics.map((t, i) => {
+    const m = getTopicMastery(t.id);
+    const tests = getTopicTests(t.id);
+    const last = tests[tests.length-1];
+    return `
+      <div class="topic-item stagger-${Math.min(i+1,6)}" onclick="navigateToTopic('${t.id}')">
+        <div class="topic-icon" style="background:${m>=80?'var(--success-light)':m>=50?'var(--accent-light)':'var(--danger-light)'}">${masteryEmoji(m)}</div>
+        <div class="topic-info">
+          <div class="topic-name">${esc(t.name)}</div>
+          <div class="topic-meta">${tests.length} 次检测 · ${last ? formatDate(last.date) : '未测试'}</div>
+        </div>
+        <div class="mastery-bar"><div class="mastery-fill" style="width:${m}%;background:${scoreColor(m)}"></div></div>
+        <div class="mastery-num" style="color:${scoreColor(m)}">${m}</div>
+      </div>
+    `;
+  }).join('') : '<div class="empty-state"><div class="emoji">📝</div><div class="text">还没有关联的自测主题</div><div class="sub">做检测时输入课程相关主题即可自动关联</div></div>';
+
+  return `
+    <div class="back-btn stagger-1" onclick="navigate('schedule')">← 返回课程表</div>
+    <div class="topic-detail-header stagger-1" style="background:linear-gradient(135deg,${course.color},${course.color}dd)">
+      <div class="tdh-label">${esc(state.semesters.find(s=>s.id===course.semester)?.name || '')}</div>
+      <div class="tdh-name">${esc(course.name)}</div>
+      <div class="tdh-stats">
+        <div class="tdh-stat"><strong style="color:${scoreColor(mastery)=== 'var(--danger)' ? '#fecaca' : scoreColor(mastery)=== 'var(--accent)' ? '#fde68a' : '#bbf7d0'}">${mastery}</strong>掌握度</div>
+        <div class="tdh-stat"><strong>${topics.length}</strong>主题</div>
+        <div class="tdh-stat"><strong>${allTests.length}</strong>检测</div>
+        ${examStatus ? `<div class="tdh-stat"><strong>${examStatus.label}</strong>考试</div>` : ''}
+      </div>
+    </div>
+    ${allTests.length >= 2 ? renderCourseTrendChart(allTests) : ''}
+    <div class="section-title">关联主题</div>
+    <div class="card" style="padding:12px">${topicsHtml}</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="editCourse('${course.id}')">编辑课程</button>
+      <button class="btn btn-danger" style="flex:1" onclick="deleteCourse('${course.id}')">删除课程</button>
+    </div>
+  `;
+}
+
+function renderCourseTrendChart(allTests) {
+  const sorted = [...allTests].sort((a,b) => a.date - b.date).slice(-15);
+  const chartW = 620, chartH = 100, padX = 20, padY = 15;
+  const plotW = chartW - padX * 2, plotH = chartH - padY * 2;
+  const points = sorted.map((t, i) => ({
+    x: padX + (sorted.length === 1 ? plotW/2 : (i / (sorted.length - 1)) * plotW),
+    y: padY + (1 - t.score / 100) * plotH,
+    score: t.score, type: t.type, date: t.date
+  }));
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const areaD = pathD ? `${pathD} L ${points[points.length-1]?.x} ${padY+plotH} L ${points[0]?.x} ${padY+plotH} Z` : '';
+  const typeColors = { feynman: 'var(--accent)', recall: 'var(--primary)', quiz: 'var(--success)' };
+  return `
+    <div class="trend-chart stagger-2">
+      <div class="trend-chart-header">
+        <div class="trend-chart-title">📈 成绩趋势</div>
+        <div class="text-xs text-faint">${sorted.length} 次检测</div>
+      </div>
+      <svg class="trend-chart-svg" viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="courseTrendGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--primary)" stop-opacity=".15"/>
+            <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="${padX}" y1="${padY}" x2="${chartW-padX}" y2="${padY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="${padX}" y1="${padY + plotH/2}" x2="${chartW-padX}" y2="${padY + plotH/2}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="${padX}" y1="${padY+plotH}" x2="${chartW-padX}" y2="${padY+plotH}" stroke="var(--border)" stroke-width="1"/>
+        ${areaD ? `<path d="${areaD}" fill="url(#courseTrendGrad)"/>` : ''}
+        ${pathD ? `<path d="${pathD}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ''}
+        ${points.map(p => `
+          <circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--card)" stroke="${typeColors[p.type]}" stroke-width="2.5"/>
+        `).join('')}
+      </svg>
+    </div>
+  `;
+}
+
+function editCourse(courseId) {
+  const course = state.courses[courseId];
+  if (!course) return;
+  const semOptions = state.semesters.map(s =>
+    `<option value="${s.id}" ${s.id === course.semester ? 'selected' : ''}>${esc(s.name)}</option>`
+  ).join('');
+  const colorOptions = COURSE_COLORS.map(c =>
+    `<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:4px">
+      <input type="radio" name="edit-course-color" value="${c}" ${c===course.color?'checked':''} style="width:auto">
+      <span class="course-dot" style="background:${c};width:16px;height:16px"></span>
+    </label>`
+  ).join('');
+  const examDateStr = course.examDate ? new Date(course.examDate).toISOString().slice(0,10) : '';
+  const html = `
+    <div class="form-group">
+      <label class="form-label">课程名称</label>
+      <input class="form-input" id="edit-course-name" value="${esc(course.name)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">所属学期</label>
+      <select class="form-input" id="edit-course-semester" style="cursor:pointer">${semOptions}</select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">考试日期（可选）</label>
+      <input class="form-input" type="date" id="edit-course-exam" value="${examDateStr}">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">颜色标记</label>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${colorOptions}</div>
+    </div>
+  `;
+  showModal('编辑课程', html, [
+    { label: '取消', cls: 'btn-secondary' },
+    { label: '保存', cls: 'btn-primary', onClick: () => {
+      course.name = document.getElementById('edit-course-name')?.value.trim() || course.name;
+      course.semester = document.getElementById('edit-course-semester')?.value || course.semester;
+      const examStr = document.getElementById('edit-course-exam')?.value;
+      course.examDate = examStr ? new Date(examStr).getTime() : null;
+      const colorEl = document.querySelector('input[name="edit-course-color"]:checked');
+      if (colorEl) course.color = colorEl.value;
+      saveState();
+      navigate('courseDetail');
+      toast('课程已更新');
+    }}
+  ]);
+}
+
+function deleteCourse(courseId) {
+  showModal('删除课程', '删除课程后，关联的主题和检测记录不会删除，但会失去课程关联。确定删除？', [
+    { label: '取消', cls: 'btn-secondary' },
+    { label: '删除', cls: 'btn-danger', onClick: () => {
+      // Unlink topics
+      Object.values(state.topics).filter(t => t.courseId === courseId).forEach(t => { t.courseId = null; });
+      delete state.courses[courseId];
+      saveState();
+      navigate('schedule');
+      toast('课程已删除');
+    }}
+  ]);
+}
+
+/* ============================================================
+   OVERVIEW (全景视图 - enhanced with search & filter)
+   ============================================================ */
+function renderOverview() {
+  const topics = getAllTopics();
+  const allTests = getAllTests();
+
+  if (topics.length === 0 && Object.keys(state.courses).length === 0) {
+    return `
+      <div class="card stagger-1">
+        <div class="empty-state">
+          <div class="emoji">📊</div>
+          <div class="text">还没有测试数据</div>
+          <div class="sub">去做一次检测或创建课程就能看到全景了</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="navigate('test')">去检测</button>
+      <button class="btn btn-secondary mt-8" onclick="navigate('schedule')">去创建课程</button>
+    `;
+  }
+
+  // Search bar
+  let html = `
+    <div class="search-bar stagger-1">
+      <span class="search-icon">🔍</span>
+      <input id="overview-search" placeholder="搜索主题..." value="${esc(state.overviewSearch)}"
+             oninput="state.overviewSearch=this.value;filterOverview()">
+    </div>
+  `;
+
+  // Filter chips
+  const tags = getAllTags();
+  const courses = Object.values(state.courses);
+  const filterChips = [
+    `<div class="filter-chip ${state.overviewFilter==='all'?'active':''}" onclick="setFilter('all')">全部</div>`,
+    `<div class="filter-chip ${state.overviewFilter==='uncategorized'?'active':''}" onclick="setFilter('uncategorized')">未分类</div>`,
+    ...courses.map(c => `<div class="filter-chip ${state.overviewFilter==='course:'+c.id?'active':''}" onclick="setFilter('course:${c.id}')"><span class="course-dot" style="background:${c.color};margin-right:3px"></span>${esc(c.name)}</div>`),
+    ...tags.map(tag => `<div class="filter-chip ${state.overviewFilter==='tag:'+tag?'active':''}" onclick="setFilter('tag:${esc(tag)}')">#${esc(tag)}</div>`)
+  ];
+  html += `<div class="filter-row">${filterChips.join('')}</div>`;
+
+  // Filter topics
+  let filteredTopics = topics;
+  if (state.overviewSearch) {
+    const q = state.overviewSearch.toLowerCase();
+    filteredTopics = filteredTopics.filter(t => t.name.toLowerCase().includes(q));
+  }
+  if (state.overviewFilter === 'uncategorized') {
+    filteredTopics = filteredTopics.filter(t => !t.courseId);
+  } else if (state.overviewFilter.startsWith('course:')) {
+    const cid = state.overviewFilter.substring(7);
+    filteredTopics = filteredTopics.filter(t => t.courseId === cid);
+  } else if (state.overviewFilter.startsWith('tag:')) {
+    const tag = state.overviewFilter.substring(4);
+    filteredTopics = filteredTopics.filter(t => (t.tags || []).includes(tag));
+  }
+
+  // Sort by mastery
+  filteredTopics.sort((a, b) => getTopicMastery(b.id) - getTopicMastery(a.id));
+
+  // Radar chart (if 3+ topics)
+  if (filteredTopics.length >= 3) {
+    html += renderRadarChart(filteredTopics.slice(0, 8));
+  }
+
+  // Topic list
+  html += `<div class="section-title">主题掌握度 <span class="st-action" onclick="setFilter('all');state.overviewSearch='';navigate('overview')">清除筛选</span></div>`;
+  if (filteredTopics.length > 0) {
+    html += `<div class="card" style="padding:12px">`;
+    html += filteredTopics.map((t, i) => {
+      const mastery = getTopicMastery(t.id);
+      const tests = getTopicTests(t.id);
+      const lastTest = tests[tests.length-1];
+      const course = t.courseId ? state.courses[t.courseId] : null;
+      return `
+        <div class="topic-item stagger-${Math.min(i+1,6)}" onclick="navigateToTopic('${t.id}')">
+          <div class="topic-icon" style="background:${mastery >= 80 ? 'var(--success-light)' : mastery >= 50 ? 'var(--accent-light)' : 'var(--danger-light)'}">
+            ${masteryEmoji(mastery)}
+          </div>
+          <div class="topic-info">
+            <div class="topic-name">${esc(t.name)}</div>
+            <div class="topic-meta">
+              ${course ? `<span class="course-badge"><span class="course-dot" style="background:${course.color}"></span>${esc(course.name)}</span>` : ''}
+              ${tests.length > 0 ? `${tests.length} 次 · ${formatDate(lastTest.date)}` : '未测试'}
+            </div>
+          </div>
+          <div class="mastery-bar"><div class="mastery-fill" style="width:${mastery}%;background:${scoreColor(mastery)}"></div></div>
+          <div class="mastery-num" style="color:${scoreColor(mastery)}">${mastery}</div>
+        </div>
+      `;
+    }).join('');
+    html += `</div>`;
+  } else {
+    html += `<div class="card"><div class="empty-state"><div class="emoji">🔍</div><div class="text">没有匹配的主题</div></div></div>`;
+  }
+
+  // Recent tests
+  const recent = allTests.sort((a,b) => b.date - a.date).slice(0, 10);
+  if (recent.length > 0) {
+    html += `<div class="section-title">检测历史</div>`;
+    html += `<div class="card" style="padding:12px">`;
+    html += recent.map(t => `
+      <div class="topic-item" style="margin-bottom:0;cursor:pointer" onclick="navigateToTopic('${t.topicId}')">
+        <div class="topic-icon" style="background:var(--card-2);width:32px;height:32px;font-size:14px">
+          ${t.type === 'feynman' ? '💡' : t.type === 'recall' ? '🧠' : '🎯'}
+        </div>
+        <div class="topic-info">
+          <div class="topic-name" style="font-size:13px">${esc(t.topicName)}</div>
+          <div class="topic-meta"><span class="tag tag-${t.type}" style="font-size:10px">${typeName(t.type)}</span> ${formatDate(t.date)}</div>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:${scoreColor(t.score)}">${t.score}</div>
+      </div>
+    `).join('');
+    html += `</div>`;
+  }
+
+  return html;
+}
+
+function setFilter(filter) {
+  state.overviewFilter = filter;
+  navigate('overview');
+}
+
+// For search input live filtering without full re-render
+function filterOverview() {
+  // Debounced re-render
+  clearTimeout(window._filterTimeout);
+  window._filterTimeout = setTimeout(() => navigate('overview'), 300);
+}
+
+/* ============================================================
+   RADAR CHART
+   ============================================================ */
+function renderRadarChart(topics) {
+  const n = topics.length;
+  const cx = 130, cy = 130, maxR = 90;
+  const angles = topics.map((t, i) => (i / n) * Math.PI * 2 - Math.PI / 2);
+
+  // Grid circles
+  let gridCircles = '';
+  for (let r = 0.25; r <= 1; r += 0.25) {
+    const points = angles.map(a => `${cx + Math.cos(a) * maxR * r},${cy + Math.sin(a) * maxR * r}`).join(' ');
+    gridCircles += `<polygon points="${points}" fill="none" stroke="var(--border)" stroke-width="1"/>`;
+  }
+  // Grid lines
+  let gridLines = angles.map(a =>
+    `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * maxR}" y2="${cy + Math.sin(a) * maxR}" stroke="var(--border)" stroke-width="1"/>`
+  ).join('');
+
+  // Data polygon
+  const dataPoints = topics.map((t, i) => {
+    const mastery = getTopicMastery(t.id);
+    const r = (mastery / 100) * maxR;
+    return `${cx + Math.cos(angles[i]) * r},${cy + Math.sin(angles[i]) * r}`;
+  }).join(' ');
+
+  // Labels
+  const labels = topics.map((t, i) => {
+    const mastery = getTopicMastery(t.id);
+    const lr = maxR + 16;
+    const lx = cx + Math.cos(angles[i]) * lr;
+    const ly = cy + Math.sin(angles[i]) * lr;
+    const name = t.name.length > 6 ? t.name.slice(0,6)+'...' : t.name;
+    return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="var(--text-2)" font-weight="600">${esc(name)}</text>
+            <text x="${lx}" y="${ly+12}" text-anchor="middle" font-size="9" fill="${scoreColor(mastery)}" font-weight="700">${mastery}</text>`;
+  }).join('');
+
+  return `
+    <div class="radar-chart stagger-2">
+      <div class="radar-chart-title">📊 掌握度雷达图</div>
+      <svg viewBox="0 0 260 260">
+        ${gridCircles}
+        ${gridLines}
+        <polygon points="${dataPoints}" fill="rgba(99,102,241,.15)" stroke="var(--primary)" stroke-width="2"/>
+        ${topics.map((t, i) => {
+          const mastery = getTopicMastery(t.id);
+          const r = (mastery / 100) * maxR;
+          return `<circle cx="${cx + Math.cos(angles[i]) * r}" cy="${cy + Math.sin(angles[i]) * r}" r="4" fill="var(--card)" stroke="${scoreColor(mastery)}" stroke-width="2"/>`;
+        }).join('')}
+        ${labels}
+      </svg>
+    </div>
+  `;
+}
+
+/* ============================================================
+   TOPIC DETAIL VIEW (enhanced)
+   ============================================================ */
+function renderTopicDetail(topicId) {
+  const topic = state.topics[topicId];
+  if (!topic) { navigate('overview'); return ''; }
+  const tests = getTopicTests(topicId);
+  const mastery = getTopicMastery(topicId);
+  const avgScore = tests.length > 0 ? Math.round(tests.reduce((s,t) => s+t.score, 0) / tests.length) : 0;
+  const bestScore = tests.length > 0 ? Math.max(...tests.map(t => t.score)) : 0;
+  const course = topic.courseId ? state.courses[topic.courseId] : null;
+
+  // SVG trend chart
+  const chartW = 620, chartH = 100, padX = 20, padY = 15;
+  const plotW = chartW - padX * 2, plotH = chartH - padY * 2;
+  const points = tests.map((t, i) => ({
+    x: padX + (tests.length === 1 ? plotW/2 : (i / (tests.length - 1)) * plotW),
+    y: padY + (1 - t.score / 100) * plotH,
+    score: t.score, type: t.type, date: t.date
+  }));
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const areaD = pathD ? `${pathD} L ${points[points.length-1]?.x} ${padY+plotH} L ${points[0]?.x} ${padY+plotH} Z` : '';
+  const typeColors = { feynman: 'var(--accent)', recall: 'var(--primary)', quiz: 'var(--success)' };
+
+  // History table
+  const historyTable = tests.length > 0 ? `
+    <div class="card">
+      <div class="section-title" style="margin-top:0">📋 检测历史</div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>方式</th>
+            <th>分数</th>
+            <th>用时</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tests.slice().reverse().map(t => `
+            <tr>
+              <td style="font-size:12px;color:var(--text-2)">${formatDate(t.date)}</td>
+              <td><span class="tag tag-${t.type}">${typeName(t.type)}</span></td>
+              <td class="score-cell" style="color:${scoreColor(t.score)}">${t.score}</td>
+              <td style="font-size:12px;color:var(--text-2)">${Math.round(t.duration/60)}:${String(t.duration%60).padStart(2,'0')}</td>
+              <td style="text-align:right">
+                <button class="quick-btn" style="width:28px;height:28px;font-size:12px" onclick="event.stopPropagation();deleteTest('${topic.id}','${t.id}')" title="删除">🗑</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
+
+  return `
+    <div class="back-btn stagger-1" onclick="navigate('overview')">← 返回全景</div>
+    <div class="topic-detail-header stagger-1">
+      <div class="tdh-label">${course ? `<span class="course-badge" style="background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.2);color:#fff"><span class="course-dot" style="background:${course.color}"></span>${esc(course.name)}</span>` : '主题掌握度'}</div>
+      <div class="tdh-name">${esc(topic.name)}</div>
+      <div class="tdh-stats">
+        <div class="tdh-stat"><strong style="color:${mastery>=80?'#bbf7d0':mastery>=50?'#fde68a':'#fecaca'}">${mastery}</strong>当前掌握度</div>
+        <div class="tdh-stat"><strong>${avgScore}</strong>平均分</div>
+        <div class="tdh-stat"><strong>${bestScore}</strong>最高分</div>
+        <div class="tdh-stat"><strong>${tests.length}</strong>次检测</div>
+      </div>
+    </div>
+
+    ${tests.length >= 2 ? `
+      <div class="trend-chart stagger-2">
+        <div class="trend-chart-header">
+          <div class="trend-chart-title">📈 成绩趋势</div>
+          <div class="text-xs text-faint">${tests.length} 次检测</div>
+        </div>
+        <svg class="trend-chart-svg" viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--primary)" stop-opacity=".15"/>
+              <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="${padX}" y1="${padY}" x2="${chartW-padX}" y2="${padY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="${padX}" y1="${padY + plotH/2}" x2="${chartW-padX}" y2="${padY + plotH/2}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="${padX}" y1="${padY+plotH}" x2="${chartW-padX}" y2="${padY+plotH}" stroke="var(--border)" stroke-width="1"/>
+          ${areaD ? `<path d="${areaD}" fill="url(#trendGrad)"/>` : ''}
+          ${pathD ? `<path d="${pathD}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ''}
+          ${points.map(p => `
+            <circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--card)" stroke="${typeColors[p.type]}" stroke-width="2.5"/>
+          `).join('')}
+        </svg>
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--text-3)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span>费曼</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></span>回忆</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--success)"></span>闯关</span>
+        </div>
+      </div>
+    ` : ''}
+
+    ${historyTable}
+
+    <!-- Detailed test records -->
+    ${tests.length > 0 ? `
+      <div class="section-title">详细记录</div>
+      ${tests.slice().reverse().map((t, i) => `
+        <div class="card stagger-${Math.min(i+1,6)}">
+          <div class="flex-between mb-8">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:20px">${t.type === 'feynman' ? '💡' : t.type === 'recall' ? '🧠' : '🎯'}</span>
+              <div>
+                <div style="font-size:14px;font-weight:700"><span class="tag tag-${t.type}">${typeName(t.type)}</span></div>
+                <div class="text-xs text-faint">${formatDateFull(t.date)} · 用时 ${Math.round(t.duration/60)}:${String(t.duration%60).padStart(2,'0')}</div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:24px;font-weight:800;color:${scoreColor(t.score)}">${t.score}</div>
+              <div class="text-xs text-faint">${masteryLabel(t.score)}</div>
+            </div>
+          </div>
+          ${t.type === 'feynman' && t.explanation ? `
+            <div style="background:var(--card-2);border-radius:var(--radius-xs);padding:12px;font-size:13px;line-height:1.7;white-space:pre-wrap;max-height:150px;overflow-y:auto;border:1px solid var(--border);margin-top:8px">
+              ${esc(t.explanation)}
+            </div>
+          ` : ''}
+          ${t.type === 'recall' && t.subtopics ? `
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
+              ${t.subtopics.map(s => `
+                <span class="chip" style="font-size:11px;${s.grade==='good'?'border-color:var(--success);color:var(--success)':s.grade==='mid'?'border-color:var(--accent);color:var(--accent)':'border-color:var(--danger);color:var(--danger)'}">
+                  ${s.grade==='good'?'✅':s.grade==='mid'?'🤔':'❌'} ${esc(s.name)}
+                </span>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${t.type === 'quiz' && t.details ? `
+            <div style="margin-top:8px">
+              ${t.details.map((d,i) => `
+                <div style="font-size:12px;padding:4px 0;display:flex;gap:6px">
+                  <span>${d.grade==='good'?'✅':d.grade==='mid'?'🤔':'❌'}</span>
+                  <span class="text-muted">${esc(d.q.slice(0,40))}${d.q.length>40?'...':''}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `).join('')}
+    ` : '<div class="empty-state"><div class="emoji">📋</div><div class="text">还没有检测记录</div></div>'}
+
+    <div class="card">
+      <div class="section-title" style="margin-top:0">🏷 标签管理</div>
+      <div class="chip-list">
+        ${(topic.tags || []).map(tag => `
+          <span class="chip">#${esc(tag)} <span class="chip-remove" onclick="removeTag('${topic.id}','${esc(tag)}')">×</span></span>
+        `).join('') || '<span class="text-faint text-sm">暂无标签</span>'}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input class="form-input" id="new-tag-${topic.id}" placeholder="输入标签名" style="font-size:14px"
+               onkeydown="if(event.key==='Enter')addTag('${topic.id}')">
+        <button class="btn btn-secondary btn-sm" onclick="addTag('${topic.id}')">添加</button>
+      </div>
+    </div>
+
+    ${course ? `
+      <div class="card">
+        <div class="flex-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="course-dot" style="background:${course.color};width:14px;height:14px"></span>
+            <span class="text-sm">所属课程：<strong>${esc(course.name)}</strong></span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="unlinkTopic('${topic.id}')">解除关联</button>
+        </div>
+      </div>
+    ` : `
+      <div class="card">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">关联到课程（可选）</label>
+          <select class="form-input" style="cursor:pointer" onchange="linkTopicToCourse('${topic.id}',this.value)">
+            <option value="">选择课程...</option>
+            ${Object.values(state.courses).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    `}
+
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="navigate('overview')">返回全景</button>
+      <button class="btn btn-primary" style="flex:1" onclick="quickRetest('${topic.id}','${tests[tests.length-1]?.type || 'feynman'}')">再测一次</button>
+    </div>
+  `;
+}
+
+function deleteTest(topicId, testId) {
+  showModal('删除记录', '确定删除这条检测记录吗？', [
+    { label: '取消', cls: 'btn-secondary' },
+    { label: '删除', cls: 'btn-danger', onClick: () => {
+      const topic = state.topics[topicId];
+      if (topic) {
+        topic.tests = topic.tests.filter(t => t.id !== testId);
+        saveState();
+        navigate('topicDetail');
+        toast('记录已删除');
+      }
+    }}
+  ]);
+}
+
+function addTag(topicId) {
+  const input = document.getElementById('new-tag-' + topicId);
+  if (!input) return;
+  const tag = input.value.trim();
+  if (!tag) return;
+  const topic = state.topics[topicId];
+  if (!topic.tags) topic.tags = [];
+  if (topic.tags.includes(tag)) { toast('标签已存在'); return; }
+  topic.tags.push(tag);
+  saveState();
+  navigate('topicDetail');
+  toast('标签已添加');
+}
+
+function removeTag(topicId, tag) {
+  const topic = state.topics[topicId];
+  if (topic.tags) {
+    topic.tags = topic.tags.filter(t => t !== tag);
+    saveState();
+    navigate('topicDetail');
+  }
+}
+
+function linkTopicToCourse(topicId, courseId) {
+  if (!courseId) return;
+  state.topics[topicId].courseId = courseId;
+  saveState();
+  navigate('topicDetail');
+  toast('已关联到课程');
+}
+
+function unlinkTopic(topicId) {
+  state.topics[topicId].courseId = null;
+  saveState();
+  navigate('topicDetail');
+  toast('已解除关联');
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function renderSettings() {
+  const totalTests = getAllTests().length;
+  const totalTopics = Object.keys(state.topics).length;
+  const totalCourses = Object.keys(state.courses).length;
+  const storageSize = new Blob([localStorage.getItem(STORAGE_KEY) || '']).size;
+
+  const cloudCard = isOnlineMode && currentUser ? `
+    <div class="settings-group stagger-2">
+      <div class="settings-item" style="cursor:default">
+        <div class="si-left">
+          <span class="si-icon">☁️</span>
+          <span class="si-label">云端账户</span>
+        </div>
+        <span class="si-value" style="color:var(--success)">已连接</span>
+      </div>
+      <div style="padding:0 20px 16px;font-size:13px;color:var(--text-2)">
+        <div class="flex-between" style="padding:6px 0">登录邮箱<span style="font-weight:700">${esc(currentUser.email)}</span></div>
+        <div class="flex-between" style="padding:6px 0">同步状态<span style="font-weight:700;color:var(--success)">自动同步中</span></div>
+        <div style="margin-top:8px">
+          <button class="btn btn-ghost btn-sm" onclick="cloudPushAll()">立即同步</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:8px;color:var(--danger)" onclick="handleLogout()">退出登录</button>
+        </div>
+      </div>
+    </div>
+  ` : `
+    <div class="settings-group stagger-2">
+      <div class="settings-item" style="cursor:default">
+        <div class="si-left">
+          <span class="si-icon">📱</span>
+          <span class="si-label">数据存储</span>
+        </div>
+        <span class="si-value" style="color:var(--accent)">离线模式</span>
+      </div>
+      <div style="padding:0 20px 16px;font-size:13px;color:var(--text-2)">
+        <div>数据仅保存在本地浏览器，换设备/清缓存会丢失。</div>
+        <div style="margin-top:8px">配置 Supabase 后可启用云端同步 →</div>
+      </div>
+    </div>
+  `;
+
+  return `
+    <div class="card stagger-1">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div style="font-size:32px">⚙️</div>
+        <div>
+          <div style="font-size:18px;font-weight:800">设置</div>
+          <div class="text-xs text-faint">学会了吗？V3 Cloud · 大学4年长期版</div>
+        </div>
+      </div>
+    </div>
+
+    ${cloudCard}
+
+    <div class="settings-group stagger-3">
+      <div class="settings-item" onclick="toggleTheme()">
+        <div class="si-left">
+          <span class="si-icon">${state.theme === 'dark' ? '☀️' : '🌙'}</span>
+          <span class="si-label">深色模式</span>
+        </div>
+        <span class="si-value">${state.theme === 'dark' ? '已开启' : '关闭'}</span>
+      </div>
+      <div class="settings-item" onclick="exportData()">
+        <div class="si-left">
+          <span class="si-icon">📤</span>
+          <span class="si-label">导出数据</span>
+        </div>
+        <span class="si-value">备份为 JSON</span>
+      </div>
+      <div class="settings-item" onclick="importData()">
+        <div class="si-left">
+          <span class="si-icon">📥</span>
+          <span class="si-label">导入数据</span>
+        </div>
+        <span class="si-value">从备份恢复</span>
+      </div>
+    </div>
+
+    <div class="settings-group stagger-4">
+      <div class="settings-item" style="cursor:default">
+        <div class="si-left">
+          <span class="si-icon">📊</span>
+          <span class="si-label">数据统计</span>
+        </div>
+      </div>
+      <div style="padding:0 20px 16px;font-size:13px;color:var(--text-2)">
+        <div class="flex-between" style="padding:6px 0">主题总数<span style="font-weight:700">${totalTopics}</span></div>
+        <div class="flex-between" style="padding:6px 0">检测总数<span style="font-weight:700">${totalTests}</span></div>
+        <div class="flex-between" style="padding:6px 0">课程总数<span style="font-weight:700">${totalCourses}</span></div>
+        <div class="flex-between" style="padding:6px 0">本地存储<span style="font-weight:700">${(storageSize/1024).toFixed(1)} KB</span></div>
+        ${isOnlineMode ? `<div class="flex-between" style="padding:6px 0">云端同步<span style="font-weight:700;color:var(--success)">✅ 已启用</span></div>` : ''}
+      </div>
+    </div>
+
+    <div class="settings-group stagger-5">
+      <div class="settings-item" style="cursor:default">
+        <div class="si-left">
+          <span class="si-icon">💡</span>
+          <span class="si-label">关于</span>
+        </div>
+      </div>
+      <div style="padding:0 20px 16px;font-size:13px;color:var(--text-2);line-height:1.8">
+        <div><strong>学会了吗？V3 Cloud</strong></div>
+        <div>三种检测模式：费曼讲解法、主动回忆、自测闯关</div>
+        <div>课程表管理 · 掌握度追踪 · 云端同步</div>
+        <div style="margin-top:8px;color:var(--text-3);font-size:12px">
+          ${isOnlineMode ? '数据自动同步到云端，多设备通用。' : '配置 Supabase 后可启用云端同步，数据自动备份。'}
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group stagger-6">
+      <div class="settings-item" onclick="clearAllData()" style="color:var(--danger)">
+        <div class="si-left">
+          <span class="si-icon">🗑</span>
+          <span class="si-label" style="color:var(--danger)">清空所有数据</span>
+        </div>
+        <span class="si-value" style="color:var(--danger)">不可撤销</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   DATA EXPORT/IMPORT
+   ============================================================ */
+function exportData() {
+  const data = JSON.stringify({
+    topics: state.topics, quizzes: state.quizzes,
+    courses: state.courses, semesters: state.semesters
+  }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `selftest_v3_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('数据已导出');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.topics) Object.assign(state.topics, data.topics);
+        if (data.quizzes) Object.assign(state.quizzes, data.quizzes);
+        if (data.courses) Object.assign(state.courses, data.courses);
+        if (data.semesters) state.semesters = data.semesters;
+        saveState();
+        navigate('settings');
+        toast('数据导入成功');
+      } catch(err) {
+        toast('导入失败：文件格式错误');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function clearAllData() {
+  showModal('清空所有数据', '确定清空所有检测记录、主题、课程和数据吗？此操作不可撤销。建议先导出备份。', [
+    { label: '取消', cls: 'btn-secondary' },
+    { label: '清空', cls: 'btn-danger', onClick: () => {
+      state.topics = {};
+      state.quizzes = {};
+      state.courses = {};
+      state.semesters = [{ id: 'default', name: '默认学期' }];
+      saveState();
+      navigate('settings');
+      toast('数据已清空');
+    }}
+  ]);
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function getNextStep(score, type) {
+  if (score >= 85) {
+    return `🎉 太棒了！你已经真正掌握了这个主题。<br><br>建议：试试用另一种方法再检验一次（比如用「${type === 'feynman' ? '主动回忆' : '费曼讲解法'}」），或者把范围扩大，检验更深入的知识点。`;
+  }
+  if (score >= 65) {
+    return `👍 基本掌握了，但还有提升空间。<br><br>建议：找到你没答好的部分，重新学习后再测一次。间隔一两天再测效果更好——遗忘曲线会帮你巩固长期记忆。`;
+  }
+  if (score >= 40) {
+    return `🤔 还需要继续努力。<br><br>建议：先回去把基础概念重新学一遍，重点理解「为什么」而不只是「是什么」。学完后再来做一次检测。`;
+  }
+  return `❌ 看起来这个主题还没真正掌握。<br><br>别灰心，知道哪里不会就是进步的开始！建议：从头系统学习一遍。`;
+}
+
+/* ============================================================
+   INIT — 云端版启动流程
+   ============================================================ */
+async function init() {
+  loadStateLocal();
+  applyTheme();
+
+  // 初始化 Supabase
+  const hasCloud = initSupabase();
+
+  if (hasCloud) {
+    // 检查是否有已保存的登录会话
+    const user = await checkAuth();
+    if (user) {
+      // 已登录，拉取云端数据
+      isOnlineMode = true;
+      await cloudPullAll();
+      applyTheme();
+      navigate('home');
+      updateUserInfo();
+    } else {
+      // 未登录，显示登录页
+      loadStateLocal();
+      navigate('home');
+      showAuthOverlay();
+    }
+  } else {
+    // 没配置云端，离线模式
+    navigate('home');
+  }
+}
+
+// 退出登录
+async function handleLogout() {
+  await signOut();
+  isOnlineMode = false;
+  // 清空本地数据，避免下一个用户看到
+  state.topics = {};
+  state.quizzes = {};
+  state.courses = {};
+  state.semesters = [{ id: 'default', name: '默认学期' }];
+  saveStateLocal();
+  navigate('home');
+  showAuthOverlay();
+  toast('已退出登录');
+}
+
+window.addEventListener('popstate', () => {
+  if (state.currentView !== 'home') navigate('home');
+});
+
+init();
+</script>
+</body>
+</html>
