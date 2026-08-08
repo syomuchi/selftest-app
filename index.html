@@ -867,23 +867,23 @@ textarea{resize:vertical;min-height:120px;line-height:1.7}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script src="https://sfile.chatglm.cn/workspace/file/c5/c55948ac47.js"></script>
 <script>
 /* ============================================================
    CLOUD SYNC LAYER — Supabase 集成
    ============================================================ */
-let supabase = null;
+let _sbClient = null;
 let currentUser = null;
 let syncTimer = null;
 let isOnlineMode = false;
 
 function initSupabase() {
   if (typeof SUPABASE_URL === 'undefined' || SUPABASE_URL.includes('在这里粘贴')) {
-    console.warn('[Cloud] config.js 未配置，将使用离线模式');
+    console.warn('[Cloud] https://sfile.chatglm.cn/workspace/file/c5/c55948ac47.js 未配置，将使用离线模式');
     return false;
   }
   try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return true;
   } catch(e) {
     console.error('[Cloud] Supabase 初始化失败:', e);
@@ -893,8 +893,8 @@ function initSupabase() {
 
 // 检查登录状态
 async function checkAuth() {
-  if (!supabase) return null;
-  const { data: { session } } = await supabase.auth.getSession();
+  if (!_sbClient) return null;
+  const { data: { session } } = await _sbClient.auth.getSession();
   if (session) {
     currentUser = session.user;
     return session.user;
@@ -904,21 +904,21 @@ async function checkAuth() {
 
 // 注册
 async function signUp(email, password) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await _sbClient.auth.signUp({ email, password });
   if (error) throw error;
   return data;
 }
 
 // 登录
 async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await _sbClient.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
 }
 
 // 退出
 async function signOut() {
-  if (supabase) await supabase.auth.signOut();
+  if (_sbClient) await _sbClient.auth.signOut();
   currentUser = null;
   isOnlineMode = false;
 }
@@ -927,7 +927,7 @@ async function signOut() {
 
 // 推送全部本地数据到云端
 async function cloudPushAll() {
-  if (!supabase || !currentUser) return;
+  if (!_sbClient || !currentUser) return;
   showSyncIndicator(true);
   try {
     const uid = currentUser.id;
@@ -935,7 +935,7 @@ async function cloudPushAll() {
     // Push semesters
     for (const sem of state.semesters) {
       if (!sem.id || sem.id === 'default') continue;
-      await supabase.from('semesters').upsert({
+      await _sbClient.from('semesters').upsert({
         id: sem.id, user_id: uid, name: sem.name,
         start_date: sem.startDate || null, end_date: sem.endDate || null
       });
@@ -944,7 +944,7 @@ async function cloudPushAll() {
     // Push courses
     for (const cid in state.courses) {
       const c = state.courses[cid];
-      await supabase.from('courses').upsert({
+      await _sbClient.from('courses').upsert({
         id: c.id, user_id: uid, name: c.name,
         semester_id: c.semester || null, color: c.color || '#6366f1',
         exam_date: c.examDate || null, notes: c.notes || ''
@@ -954,7 +954,7 @@ async function cloudPushAll() {
     // Push topics (without tests)
     for (const tid in state.topics) {
       const t = state.topics[tid];
-      await supabase.from('topics').upsert({
+      await _sbClient.from('topics').upsert({
         id: t.id, user_id: uid, name: t.name,
         tags: t.tags || [], course_id: t.courseId || null,
         created_at: new Date(t.createdAt || Date.now()).toISOString()
@@ -963,7 +963,7 @@ async function cloudPushAll() {
       // Push tests for this topic
       if (t.tests) {
         for (const test of t.tests) {
-          await supabase.from('tests').upsert({
+          await _sbClient.from('tests').upsert({
             id: test.id, user_id: uid, topic_id: t.id,
             type: test.type, score: test.score,
             duration: test.duration || 0,
@@ -980,14 +980,14 @@ async function cloudPushAll() {
     // Push quizzes
     for (const qid in state.quizzes) {
       const q = state.quizzes[qid];
-      await supabase.from('quizzes').upsert({
+      await _sbClient.from('quizzes').upsert({
         id: q.id, user_id: uid, name: q.name,
         questions: q.questions
       });
     }
 
     // Push settings
-    await supabase.from('user_settings').upsert({
+    await _sbClient.from('user_settings').upsert({
       user_id: uid, dark_mode: state.theme === 'dark',
       has_seen_welcome: state.hasSeenWelcome
     });
@@ -1001,13 +1001,13 @@ async function cloudPushAll() {
 
 // 从云端拉取全部数据
 async function cloudPullAll() {
-  if (!supabase || !currentUser) return false;
+  if (!_sbClient || !currentUser) return false;
   showSyncIndicator(true);
   try {
     const uid = currentUser.id;
 
     // Pull semesters
-    const { data: semesters } = await supabase.from('semesters').select('*').eq('user_id', uid);
+    const { data: semesters } = await _sbClient.from('semesters').select('*').eq('user_id', uid);
     state.semesters = (semesters || []).map(s => ({
       id: s.id, name: s.name,
       startDate: s.start_date, endDate: s.end_date
@@ -1017,7 +1017,7 @@ async function cloudPullAll() {
     }
 
     // Pull courses
-    const { data: courses } = await supabase.from('courses').select('*').eq('user_id', uid);
+    const { data: courses } = await _sbClient.from('courses').select('*').eq('user_id', uid);
     state.courses = {};
     (courses || []).forEach(c => {
       state.courses[c.id] = {
@@ -1027,8 +1027,8 @@ async function cloudPullAll() {
     });
 
     // Pull topics
-    const { data: topics } = await supabase.from('topics').select('*').eq('user_id', uid);
-    const { data: tests } = await supabase.from('tests').select('*').eq('user_id', uid);
+    const { data: topics } = await _sbClient.from('topics').select('*').eq('user_id', uid);
+    const { data: tests } = await _sbClient.from('tests').select('*').eq('user_id', uid);
 
     state.topics = {};
     (topics || []).forEach(t => {
@@ -1045,14 +1045,14 @@ async function cloudPullAll() {
     });
 
     // Pull quizzes
-    const { data: quizzes } = await supabase.from('quizzes').select('*').eq('user_id', uid);
+    const { data: quizzes } = await _sbClient.from('quizzes').select('*').eq('user_id', uid);
     state.quizzes = {};
     (quizzes || []).forEach(q => {
       state.quizzes[q.id] = { id: q.id, name: q.name, questions: q.questions };
     });
 
     // Pull settings
-    const { data: settings } = await supabase.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
+    const { data: settings } = await _sbClient.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
     if (settings) {
       state.theme = settings.dark_mode ? 'dark' : 'light';
       state.hasSeenWelcome = settings.has_seen_welcome;
